@@ -4,6 +4,17 @@
 
 ## Team Members and their Roles
 
+| Team Member           | Role          |
+| --------------------- |:-------------:|
+| Florian Koudjonou     | Scrum Master  |
+| Anne-Sophie Cusson    | Developper    |
+| Jean-Sébastien Demers | Developper    |
+| Basma Kaanane         | Developper    |
+
+
+These roles may evolve or change throughout the project, but we have decided not to start the project with very strict roles.
+
+
 ## Objectives
 
 #### Benefit to Customer
