@@ -2,7 +2,12 @@
 
 ## Outline
 
-### [Objectives](#objectives)
+- [Team Members and their Roles](#team-members-and-their-roles)
+- [Objectives](#objectives)
+- [Expected/Anticipated Architecture](#expectedanticipated-architecture)
+- [Anticipated Risks](#anticipated-risks)
+- [Legal and Social Issues](#legal-and-social-issues)
+- [Initial Plans for Release](#initial-plans-for-release)
 
 ## Team Members and their Roles
 
@@ -27,7 +32,7 @@ These roles may evolve or change throughout the project, but we have decided not
 
 ## Anticipated Risks
 
-## Legal and social issues
+## Legal and Social Issues
 
 The main legal or social issues associated with our project would be reliability.
 
