@@ -27,6 +27,10 @@ These roles may evolve or change throughout the project, but we have decided not
 
 ## Legal and social issues
 
+The main legal or social issues associated with our project would be reliability. 
+
+Oscilloscopes are used to perform tests and maintenance on devices in many fields where the reliability of the equipment is top priority. These industries include aerospace & defense, civil aviation, rail, and medical industries. An unreliable oscilloscope used in those industries could be responsible for life threatening incidents. Therefore, the highest standards of reliability, accuracy and quality must be met by the Adascope Oscilloscope.
+
 ## Initial Plans for Release
 
 We currently have two github repositories for the project. We have the ui repo which holds the software that will run the user interface on the host pc, and the firmware repo that will do data collection on the stm32mp157f-dk2 development board.
