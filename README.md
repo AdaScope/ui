@@ -2,6 +2,8 @@
 
 ## Outline
 
+### [Objectives](#objectives)
+
 ## Team Members and their Roles
 
 | Team Member           |            Role            |
