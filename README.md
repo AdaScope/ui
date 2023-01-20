@@ -2,6 +2,8 @@
 
 ## Outline
 
+### [Objectives](#objectives)
+
 ## Team Members and their Roles
 
 | Team Member           |     Role     |
@@ -27,7 +29,7 @@ These roles may evolve or change throughout the project, but we have decided not
 
 ## Legal and social issues
 
-The main legal or social issues associated with our project would be reliability. 
+The main legal or social issues associated with our project would be reliability.
 
 Oscilloscopes are used to perform tests and maintenance on devices in many fields where the reliability of the equipment is top priority. These industries include aerospace & defense, civil aviation, rail, and medical industries. An unreliable oscilloscope used in those industries could be responsible for life threatening incidents. Therefore, the highest standards of reliability, accuracy and quality must be met by the Adascope Oscilloscope.
 
