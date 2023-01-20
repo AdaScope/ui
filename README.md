@@ -6,12 +6,12 @@
 
 ## Team Members and their Roles
 
-| Team Member           |     Role     |
-| --------------------- | :----------: |
-| Florian Koudjonou     | Scrum Master |
-| Anne-Sophie Cusson    |  Developper  |
-| Jean-Sébastien Demers |  Developper  |
-| Basma Kaanane         |  Developper  |
+| Team Member           |            Role            |
+| --------------------- | :------------------------: |
+| Florian Koudjonou     | Scrum Master and developer |
+| Anne-Sophie Cusson    |         Developer          |
+| Jean-Sébastien Demers |         Developer          |
+| Basma Kaanane         |         Developer          |
 
 These roles may evolve or change throughout the project, but we have decided not to start the project with very strict roles.
 
@@ -21,9 +21,14 @@ These roles may evolve or change throughout the project, but we have decided not
 
 #### Key Things to Accomplish
 
-#### Criterai for success
+#### Criteria for success
 
 ## Expected/Anticipated Architecture
+
+We will build the entire firmware of the oscilloscope using Ada and SPARK. Our client wants us to use those two languages for their reliability.
+That firmware will then be executed on an STM32MP157 board running OpenSTLinux.
+The signals measured by the board will then be sent to another computer via UART.
+That second computer will run another program for the UI. That program will also be written in Ada and/or SPARK and we will use a library called GtkAda for the UI.
 
 ## Anticipated Risks
 
@@ -31,7 +36,7 @@ These roles may evolve or change throughout the project, but we have decided not
 
 The main legal or social issues associated with our project would be reliability.
 
-Oscilloscopes are used to perform tests and maintenance on devices in many fields where the reliability of the equipment is top priority. These industries include aerospace & defense, civil aviation, rail, and medical industries. An unreliable oscilloscope used in those industries could be responsible for life threatening incidents. Therefore, the highest standards of reliability, accuracy and quality must be met by the Adascope Oscilloscope.
+Oscilloscopes are used to perform tests and maintenance on devices in many fields where the reliability of the equipment is top priority. These industries include aerospace & defense, civil aviation, rail, and medical industries. An unreliable oscilloscope used in those industries could be responsible for life threatening incidents. Therefore, the highest standards of reliability, accuracy and quality must be met by the AdaScope Oscilloscope.
 
 ## Initial Plans for Release
 
