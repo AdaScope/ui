@@ -23,9 +23,10 @@ These roles may evolve or change throughout the project, but we have decided not
 
 ## Expected/Anticipated Architecture
 
-Will will build the entire firmware of the oscilloscope using Ada and SPARK. Our client wants us to use those two languages for their reliability.
+We will build the entire firmware of the oscilloscope using Ada and SPARK. Our client wants us to use those two languages for their reliability.
 That firmware will then be executed on an STM32MP157 board running OpenSTLinux.
-The signals measured by the oscilloscope will the be sent to another computer via UART.
+The signals measured by the board will then be sent to another computer via UART.
+That second computer will run another program for the UI. That program will also be written in Ada and/or SPARK and we will use a library called GtkAda for the UI.
 
 ## Anticipated Risks
 
