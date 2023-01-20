@@ -21,13 +21,25 @@
 These roles may evolve or change throughout the project, but we have decided not to start the project with very strict roles.
 
 ## Objectives
-Test 
-
 #### Benefit to Customer
-
+Oscilloscopes are specifically designed for waveform measurement and typically are faster and more precise than other types of testing devices widely found on the market. The oscilloscope developped will allow the customer to perform various amplitude and frequence measurements accurately and fastly. Furthermore, it is going to show the different signals curves and shapes on its interface which will help the customer understand the behavior and nature of signals. 
 #### Key Things to Accomplish
-
+The oscilloscope have to : 
+    - calculate a signal amplitude plus the signal frequency
+    - display if the signal is of the expected shape 
+    - diplay shapes within a grid overlay
+    - provide the ability to control and change how many volts are represented by each vertical increment of grid overlay on the screen.
+    - measure the A.C. signals
+    - Show the maximum and minimal signal amplitude 
 #### Criteria for success
+The oscilloscope should : 
+    - be able to calculate a signal amplitude and frequency with accuracy
+    - be available to use when needed
+    - display the signal shape in its interface with accuracy 
+    - have a bandwidth that is superior than the highest frequency component signal multiplied by 5 
+    - be user friendly 
+    - respect the safety and security norms 
+    - The oscilloscope code have to be easily maintainable 
 
 ## Expected/Anticipated Architecture
 
