@@ -50,7 +50,7 @@ That second computer will run another program for the UI. That program will also
 
 ## Anticipated Risks
 
-The main risks anticipated for the development of the oscilloscope are: inaccuracy of results since a lot of calcultions would be needed - several breakdown of the oscilloscope since the oscilloscope should be available whenever needed - lack of perfomance of the UI since we have strict time constraints 
+The main risks anticipated for the development of the oscilloscope are: inaccuracy of results since a lot of calculations would be needed - several breakdown of the oscilloscope may happen since the oscilloscope should be available whenever needed - lack of perfomance of the UI since we have strict time constraints 
 
 ## Legal and Social Issues
 
