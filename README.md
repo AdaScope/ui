@@ -3,6 +3,7 @@
 ## Outline
 
 - [Team Members and their Roles](#team-members-and-their-roles)
+- [Documentation](#documentation)
 - [Objectives](#objectives)
 - [Expected/Anticipated Architecture](#expectedanticipated-architecture)
 - [Anticipated Risks](#anticipated-risks)
@@ -19,6 +20,24 @@
 | Basma Kaanane         |         Developer          |
 
 These roles may evolve or change throughout the project, but we have decided not to start the project with very strict roles.
+
+## Related Repo
+[Firmware repository](https://github.com/AdaScope/firmware)
+
+## Documentation
+
+### [Main documentation location](https://adascope.atlassian.net/jira/software/projects/ADASCOPE/pages)
+
+### [Meeting minutes and detailed meeting notes](https://adascope.atlassian.net/wiki/spaces/DOCUMENTAT/pages/917507/Meeting+notes)
+
+### [Competitive analysis, vision and conception document}(https://adascope.atlassian.net/wiki/spaces/DOCUMENTAT/pages/4128769/Competitive+analysis+vision+and+conception+document)
+
+### [Requirements](https://adascope.atlassian.net/wiki/spaces/DOCUMENTAT/pages/1048577/Requirements)
+
+### [Tutorials and procedures](https://adascope.atlassian.net/wiki/spaces/DOCUMENTAT/pages/950274/Tutorials)
+
+### [Resources from AdaCore engineer](https://adascope.atlassian.net/wiki/spaces/DOCUMENTAT/pages/2916354/Resources+-+Olivier+Henley)
+
 
 ## Objectives
 #### Benefit to Customer
