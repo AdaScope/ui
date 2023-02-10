@@ -3,6 +3,7 @@
 ## Outline
 
 - [Team Members and their Roles](#team-members-and-their-roles)
+- [Related Repo](#related-repo)
 - [Documentation](#documentation)
 - [Objectives](#objectives)
 - [Expected/Anticipated Architecture](#expectedanticipated-architecture)
@@ -30,7 +31,7 @@ These roles may evolve or change throughout the project, but we have decided not
 
 ### [Meeting minutes and detailed meeting notes](https://adascope.atlassian.net/wiki/spaces/DOCUMENTAT/pages/917507/Meeting+notes)
 
-### [Competitive analysis, vision and conception document}(https://adascope.atlassian.net/wiki/spaces/DOCUMENTAT/pages/4128769/Competitive+analysis+vision+and+conception+document)
+### [Competitive analysis, vision and conception document](https://adascope.atlassian.net/wiki/spaces/DOCUMENTAT/pages/4128769/Competitive+analysis+vision+and+conception+document)
 
 ### [Requirements](https://adascope.atlassian.net/wiki/spaces/DOCUMENTAT/pages/1048577/Requirements)
 
