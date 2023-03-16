@@ -1,0 +1,9 @@
+name = "uart_testing"
+description = "Shiny new project"
+version = "0.1.0-dev"
+
+authors = ["Florian Koudjonou"]
+maintainers = ["Florian Koudjonou <floriankoud@hotmail.com>"]
+maintainers-logins = ["TheRealYoze"]
+
+executables = ["uart_testing"]
