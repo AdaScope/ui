@@ -3,7 +3,7 @@ package body Data_structures is
 
    function Set_To_Zero return Data_Points is
    Zero_Array : Data_Points;
-   begin 
+   begin
       for I in Zero_Array'Range loop
          Zero_Array(I) := 0.0;
       end loop;
