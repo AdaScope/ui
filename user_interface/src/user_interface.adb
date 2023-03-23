@@ -28,8 +28,9 @@ with Worker2;
 
 procedure User_Interface is
    Window          : Gtk_Window;
-   Writer      : Worker2.Process;
-   Start_Button    : Gtk_Button;
+   Writer          : Worker2.Process;
+   Play_Button    : Gtk_Button;
+   Pause_Button     : Gtk_Button;
    Oscilloscope    : Gtk_Oscilloscope;
    Curve           : Channel_Number;
    Start_Frequency : Gtk_Entry;
@@ -92,9 +93,9 @@ procedure User_Interface is
          raise Data_Error with "Wrong " & Name;
    end Value;
 --
--- Start_Clicked -- Button "start"
+-- Start_Oscilloscope -- Button "start"
 --
-   procedure Start_Clicked (Widget : access Gtk_Widget_Record'Class) is
+   procedure Start_Oscilloscope is
       use Gtk.Main.Router;
       From  : GDouble;
       To    : GDouble;
@@ -102,7 +103,8 @@ procedure User_Interface is
       Width : GDouble;
       Count : Positive;
    begin
-      Start_Button.Set_Sensitive (False);
+      Play_Button.Set_Sensitive (True);
+      Pause_Button.Set_Sensitive (False);
       From  := Value (Start_Frequency, "start frequency");
       To    := Value (Stop_Frequency,  "stop frequency");
       Count := Value (Steps,           "frequency steps");
@@ -117,7 +119,7 @@ procedure User_Interface is
          Page_Increment => Width / 10.0,
          Page_Size      => Width
       );
-         -- Initiate calculation process
+         -- Initiate writing process
       Writer.Start
       (
          Oscilloscope,
@@ -128,7 +130,42 @@ procedure User_Interface is
           Say (Exception_Message (Error));
       when Error : others =>
           Say (Exception_Information (Error));
-   end Start_Clicked;
+   end Start_Oscilloscope;
+   
+--
+-- Play_Clicked -- Button "start"
+--
+   procedure Play_Clicked (Widget : access Gtk_Widget_Record'Class) is
+      use Gtk.Main.Router;
+   begin
+      Play_Button.Set_Sensitive (False);
+      Pause_Button.Set_Sensitive (True);
+
+      Writer.Play;
+   exception
+      when Error : Data_Error =>
+          Say (Exception_Message (Error));
+      when Error : others =>
+          Say (Exception_Information (Error));
+   end Play_Clicked;
+   
+--
+-- Pause_Clicked -- Button "stop"
+--
+   procedure Pause_Clicked (Widget : access Gtk_Widget_Record'Class) is
+      use Gtk.Main.Router;
+   begin
+      Play_Button.Set_Sensitive (True);
+      Pause_Button.Set_Sensitive (False);
+
+      Writer.Pause;
+   exception
+      when Error : Data_Error =>
+          Say (Exception_Message (Error));
+      when Error : others =>
+          Say (Exception_Information (Error));
+   end Pause_Clicked;
+
 --
 -- Unicode_Toggled -- Check button toggling
 --
@@ -285,15 +322,19 @@ begin
                Unicode_Check.On_Toggled (+Unicode_Toggled'Access);
             end;
          end;
-         declare -- Start button in the left box
+         declare -- Start and stop buttons in the left box
             Box : Gtk_HBox;
          begin
             Gtk_New_HBox (Box);
             Box.Set_Spacing (3);
             Left_Box.Pack_Start (Box, False, False);
-            Gtk_New (Start_Button, "Start");
-            Box.Pack_Start (Start_Button, False, False);
-            Start_Button.On_Clicked (+Start_Clicked'Access);
+            Gtk_New (Play_Button, "Play");
+            Box.Pack_Start (Play_Button, False, False);
+            Play_Button.On_Clicked (+Play_Clicked'Access);
+            Gtk_New (Pause_Button, "Stop");
+            Box.Pack_Start (Pause_Button, False, False);
+            Pause_Button.On_Clicked (+Pause_Clicked'Access);
+            Pause_Button.Set_Sensitive (False);
          end;
       end;
       declare -- Frame with the oscilloscope on the right
@@ -336,6 +377,7 @@ begin
          Oscilloscope.Set_Values_Axis_Width (Left, 80);
       end;
    end;
+   Start_Oscilloscope;
    Window.Set_Default_Size (800, 400);
    Show_All (Window);
    Gtk.Main.Main;

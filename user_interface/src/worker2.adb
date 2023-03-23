@@ -1,29 +1,3 @@
---                                                                    --
---  package Worker    Copyright (c) Yogeshwarsing Calleecharan, 2010  --
---  Implementation                   Dmitry A. Kazakov, 2012           --
---                                                                    --
---                                Last revision :  15:58 22 Jan 2012  --
---                                                                    --
---  This  library  is  free software; you can redistribute it and/or  --
---  modify it under the terms of the GNU General Public  License  as  --
---  published by the Free Software Foundation; either version  2  of  --
---  the License, or (at your option) any later version. This library  --
---  is distributed in the hope that it will be useful,  but  WITHOUT  --
---  ANY   WARRANTY;   without   even   the   implied   warranty   of  --
---  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU  --
---  General  Public  License  for  more  details.  You  should  have  --
---  received  a  copy  of  the GNU General Public License along with  --
---  this library; if not, write to  the  Free  Software  Foundation,  --
---  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.    --
---                                                                    --
---  As a special exception, if other files instantiate generics from  --
---  this unit, or you link this unit with other files to produce  an  --
---  executable, this unit does not by  itself  cause  the  resulting  --
---  executable to be covered by the GNU General Public License. This  --
---  exception  does not however invalidate any other reasons why the  --
---  executable file might be covered by the GNU Public License.       --
---____________________________________________________________________--
-
 with Ada.Calendar;     use Ada.Calendar;
 with Ada.Exceptions;   use Ada.Exceptions;
 with Ada.Numerics;     use Ada.Numerics;
@@ -40,6 +14,9 @@ with ada.numerics.discrete_random;
 with Data_structures;
 
 package body Worker2 is
+
+   Paused : Boolean := True;
+
    --
    -- Temporary
    -- X and Y to be replaced with Data_Points objects
@@ -83,6 +60,7 @@ package body Worker2 is
    --
    -- Process -- The task doing actual computations
    --
+
    task body Process is
       Scope     : Gtk_Oscilloscope;
       Channel   : Channel_Number;
@@ -106,8 +84,8 @@ package body Worker2 is
                   Channel  : Channel_Number
                 )
          do
-           Process.Scope    := Scope;
-           Process.Channel  := Channel;
+            Process.Scope    := Scope;
+            Process.Channel  := Channel;
          end;
       or accept Stop;
          raise Quit_Error;
@@ -115,23 +93,30 @@ package body Worker2 is
       -- Starting computations
 
       -- Looping
-      while (Clock - Start_Time < 10.0) loop
-         --  Put_Line("N: "&Duration'Image(Clock - Start_Time));
+      while True loop
          --
          -- Updating each 200ms
          --
          if Clock - Last_Time > 0.2 then
             select
-               accept Stop; -- Check if existing is requested
+               accept Pause do-- Check if existing is requested
+                  Paused := True;
+               end Pause;
+               or accept Play do
+                  Paused := False;
+               end Play;
+               or accept Stop do
                   raise Quit_Error;
+               end Stop;
             else
                Last_Time := Clock;
-               Feed_UART_Data(Scope, Channel);
+               if not Paused then
+                  Feed_UART_Data(Scope, Channel);
+               end if;
             end select;
          end if;
 
       end loop;
-      Put_Line("Ended loop");
       --  return;
       accept Stop;
    exception
@@ -139,7 +124,7 @@ package body Worker2 is
          null;
       when Error : others =>
          Say (Exception_Information (Error));
-      Put_Line("Ending process");
+      Put_Line ("Ending process");
    end Process;
 
 end Worker2;
