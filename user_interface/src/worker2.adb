@@ -37,18 +37,23 @@ use  Ada.Numerics.Long_Elementary_Functions;
 
 with ada.numerics.discrete_random;
 
-package body Worker2 is
+with Data_structures;
 
+package body Worker2 is
+   --
+   -- Temporary
+   -- X and Y to be replaced with Data_Points objects
+   -- Z and random generator to be removed
+   --
    X : Integer := 0;
    Y : Integer := 0;
-   --  Z : Integer := 1;
 
-   
    type randRange is new Integer range 1..100;
    package Rand_Int is new ada.numerics.discrete_random(randRange);
    use Rand_Int;
    gen : Generator;
    Z : randRange;
+
    --
    -- Feeding data to oscilloscope
    --
@@ -56,19 +61,21 @@ package body Worker2 is
       Scope : Gtk_Oscilloscope;
       Channel   : Channel_Number) is
    begin
-      X := 0;
-      Y := 0;
-      Put_Line("Bopp ");
-      for n in 0..100 loop
-         reset(gen);
-         Z := random(gen);
+      --
+      -- Get data from UART
+      --
+      X := 0;                                                  -- v  Temporary, for testing purposes  v
+      Y := 0;                                                  --
+      for n in 0..100 loop                                     --
+         reset(gen);                                           --
+         Z := random(gen);                                     -- ^  Temporary, for testing purposes  ^
          Scope.Feed
                (  Channel => Channel,
-                  T       => GDouble (Float(X)*Float(Z)),
-                  V       => GDouble (Y)
+                  T       => GDouble (Float(X)*Float(Z)), -- Feed X data points
+                  V       => GDouble (Y)                  -- Feed Y data points
                );
-         X := X + 1;
-         Y := Y + 1;
+         X := X + 1;                                           -- v  Temporary, for testing purposes  v
+         Y := Y + 1;                                           -- ^  Temporary, for testing purposes  ^
       end loop;
 
    end Feed_UART_Data;
@@ -81,18 +88,12 @@ package body Worker2 is
       Channel   : Channel_Number;
       Last_Time : Time := Clock;
       Start_Time : Time := Clock;
-      Steps     : Positive;
 
       -- Initial time, final time, no of steps, step size
       A : constant := 0.0;
-      B : constant := 10_000.0;
-      N : constant := 2_500_000;
+      B : constant := 10_000.0;  -- To change depending on period
+      N : constant := 2_500_000; -- To change depending on buffer size
       H : constant := (B - A) / Long_Float (N);
-
-      -- Driving frequencies over whirling range
-      Forcing_Frequency_Start : Long_Float;
-      Forcing_Frequency_Limit : Long_Float;
-      Forcing_Frequency_Step  : Long_Float;
 
       -- Minmax algorithm
       Largest      : Long_Float;
@@ -101,18 +102,12 @@ package body Worker2 is
    begin
       select -- Waiting for parameters or exit request
          accept Start
-                (  Data     : Parameters;
-                   Scope    : Gtk_Oscilloscope;
-                   Channel  : Channel_Number
+                ( Scope    : Gtk_Oscilloscope;
+                  Channel  : Channel_Number
                 )
          do
-           Forcing_Frequency_Start := Data.Start;
-           Forcing_Frequency_Limit := Data.Stop;
-           Forcing_Frequency_Step :=
-              (Data.Stop - Data.Start) / Long_Float (Data.Steps);
            Process.Scope    := Scope;
            Process.Channel  := Channel;
-           Steps            := Data.Steps;
          end;
       or accept Stop;
          raise Quit_Error;
@@ -131,8 +126,6 @@ package body Worker2 is
                   raise Quit_Error;
             else
                Last_Time := Clock;
-               Put_Line("Boop ");
-               --  get_data;
                Feed_UART_Data(Scope, Channel);
             end select;
          end if;

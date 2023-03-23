@@ -59,7 +59,7 @@ package Worker2 is
    --    Channel    - The number of the channel to feed
    --
       entry Start
-            (  Data     : Parameters;
+            (
                Scope    : Gtk_Oscilloscope;
                Channel  : Channel_Number
             );
