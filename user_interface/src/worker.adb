@@ -7,9 +7,9 @@ with Ada.Numerics.Discrete_Random;
 with Ada.Text_IO;       use Ada.Text_IO;
 --  with Data_structures;
 
-package body Worker2 is
+package body Worker is
 
-   Paused : Boolean := True;
+   --  Paused : Boolean := False;
 
    --
    --  Temporary
@@ -72,6 +72,7 @@ package body Worker2 is
          do
             Process.Scope    := Scope;
             Process.Channel  := Channel;
+            Put_Line ("Ch "& Channel_Number'Image (Channel));
          end Start;
       or accept Stop;
          raise Quit_Error;
@@ -85,20 +86,20 @@ package body Worker2 is
          --  
          if Clock - Last_Time > 0.2 then
             select
-               accept Pause do--  Check if existing is requested
-                  Paused := True;
-               end Pause;
-               or accept Play do
-                  Paused := False;
-               end Play;
-               or accept Stop do
+               --  accept Pause do--  Check if existing is requested
+               --     Paused := True;
+               --  end Pause;
+               --  or accept Play do
+               --     Paused := False;
+               --  end Play;
+               accept Stop do
                   raise Quit_Error;
                end Stop;
             else
                Last_Time := Clock;
-               if not Paused then
-                  Feed_UART_Data(Scope, Channel);
-               end if;
+               --  if not Paused then
+               Feed_UART_Data(Scope, Channel);
+               --  end if;
             end select;
          end if;
 
@@ -113,4 +114,4 @@ package body Worker2 is
       Put_Line ("Ending process");
    end Process;
 
-end Worker2;
+end Worker;

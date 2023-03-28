@@ -1,39 +1,39 @@
-with Ada.Exceptions;        use Ada.Exceptions;
-with Ada.Text_IO;           use Ada.Text_IO;
-with Gdk.Event;             use Gdk.Event;
-with Glib;                  use Glib;
-with Glib.Properties;       use Glib.Properties;
-with Gtk.Enums;             use Gtk.Enums;
-with Gtk.Box;               use Gtk.Box;
-with Gtk.Button;            use Gtk.Button;
-with Gtk.Check_Button;      use Gtk.Check_Button;
 with Gtk.Toggle_Button;     use Gtk.Toggle_Button;
-with Gtk.Frame;             use Gtk.Frame;
+with Gtk.Oscilloscope;      use Gtk.Oscilloscope;
+with Gtk.Check_Button;      use Gtk.Check_Button;
+with Glib.Properties;       use Glib.Properties;
+with Ada.Exceptions;        use Ada.Exceptions;
+with Test_Generator;        use Test_Generator;
+with Ada.Text_IO;           use Ada.Text_IO;
+with Gtk.Button;            use Gtk.Button;
 with Gtk.GEntry;            use Gtk.GEntry;
 with Gtk.Missed;            use Gtk.Missed;
-with Gtk.Label;             use Gtk.Label;
-with Gtk.Oscilloscope;      use Gtk.Oscilloscope;
-with Gtk.Table;             use Gtk.Table;
 with Gtk.Widget;            use Gtk.Widget;
 with Gtk.Window;            use Gtk.Window;
+with Gdk.Event;             use Gdk.Event;
+with Gtk.Enums;             use Gtk.Enums;
+with Gtk.Frame;             use Gtk.Frame;
+with Gtk.Label;             use Gtk.Label;
+with Gtk.Table;             use Gtk.Table;
+with Gtk.Box;               use Gtk.Box;
+with Glib;                  use Glib;
 
+with Gtk.Oscilloscope.Channels_Panel; use Gtk.Oscilloscope.Channels_Panel;
+with Gtk.Main.Router.GNAT_Stack;
 with Ada.Unchecked_Conversion;
 with Gtk.Layered;
 with Gtk.Main.Router;
-with Worker2;
+with Worker;
 
 procedure User_Interface is
-   Window            : Gtk_Window;
-   Writer            : Worker2.Process;
-   Play_Button       : Gtk_Button;
-   Pause_Button      : Gtk_Button;
-   Oscilloscope      : Gtk_Oscilloscope;
-   Curve             : Channel_Number;
-   Start_Frequency   : Gtk_Entry;
-   Stop_Frequency    : Gtk_Entry;
-   Steps             : Gtk_Entry;
-   Autoscale_Check   : Gtk_Check_Button;
-   Unicode_Check     : Gtk_Check_Button;
+   Window         : Gtk_Window;
+   Oscilloscope   : Gtk_Oscilloscope;
+   Writer_Ch_1    : Worker.Process;
+   Writer_Ch_2    : Worker.Process;
+   Writer_Ch_3    : Worker.Process;
+   Channel_1      : Channel_Number;
+   Channel_2      : Channel_Number;
+   Channel_3      : Channel_Number;
 --
 --  Delete_Event -- Window closing notification event
 --
@@ -42,35 +42,17 @@ procedure User_Interface is
                Event : Gdk_Event
             )  return Boolean is
    begin
-      Writer.Stop; -- Stop the computation process
+      Writer_Ch_1.Stop; -- Stop the computation process
+      Writer_Ch_2.Stop; -- Stop the computation process
+      Writer_Ch_3.Stop; -- Stop the computation process
       return False;    -- Confirm completion exception
    exception
       when Tasking_Error =>
          return False;
    end Delete_Event;
---
---  Value -- Get floating-point value from an entry widget
---
-   function Value
-            (Edit    : Gtk_Entry;
-               Name  : String;
-               Min   : Gdouble := Gdouble'First;
-               Max   : Gdouble := Gdouble'Last
-            )  return Gdouble is
-   begin
-      return Result : constant Gdouble :=
-                               Gdouble'Value (Edit.Get_Text) do
-         if Result not in Min .. Max then
-            raise Data_Error with Name & " out of range";
-         end if;
-      end return;
-   exception
-      when Constraint_Error =>
-         raise Data_Error with "Wrong " & Name;
-   end Value;
 
 --
---  Start_Oscilloscope -- Button "start"
+--  Start_Oscilloscope
 --
    procedure Start_Oscilloscope is
       use Gtk.Main.Router;
@@ -78,10 +60,8 @@ procedure User_Interface is
       To    : Gdouble;
       Width : Gdouble;
    begin
-      Play_Button.Set_Sensitive (True);
-      Pause_Button.Set_Sensitive (False);
-      From  := Value (Start_Frequency, "start frequency");
-      To    := Value (Stop_Frequency,  "stop frequency");
+      From  := Gdouble(0);
+      To    := Gdouble(100);
       Width := To - From;
 
       --  Set page size of the scope
@@ -94,10 +74,22 @@ procedure User_Interface is
          Page_Size      => Width
       );
          --  Initiate writing process
-      Writer.Start
+      Writer_Ch_1.Start
       (
          Oscilloscope,
-         Curve
+         Channel_1
+      );
+         --  Initiate writing process
+      Writer_Ch_2.Start
+      (
+         Oscilloscope,
+         Channel_2
+      );
+         --  Initiate writing process
+      Writer_Ch_3.Start
+      (
+         Oscilloscope,
+         Channel_3
       );
    exception
       when Error : Data_Error =>
@@ -105,74 +97,7 @@ procedure User_Interface is
       when Error : others =>
          Say (Exception_Information (Error));
    end Start_Oscilloscope;
---
---  Play_Clicked -- Button "start"
---
-   procedure Play_Clicked (Widget : access Gtk_Widget_Record'Class) is
-      use Gtk.Main.Router;
-   begin
-      Play_Button.Set_Sensitive (False);
-      Pause_Button.Set_Sensitive (True);
-
-      Writer.Play;
-   exception
-      when Error : Data_Error =>
-         Say (Exception_Message (Error));
-      when Error : others =>
-         Say (Exception_Information (Error));
-   end Play_Clicked;
-
---
---  Pause_Clicked -- Button "stop"
---
-   procedure Pause_Clicked (Widget : access Gtk_Widget_Record'Class) is
-      use Gtk.Main.Router;
-   begin
-      Play_Button.Set_Sensitive (True);
-      Pause_Button.Set_Sensitive (False);
-
-      Writer.Pause;
-   exception
-      when Error : Data_Error =>
-         Say (Exception_Message (Error));
-      when Error : others =>
-         Say (Exception_Information (Error));
-   end Pause_Clicked;
-
---
---  Unicode_Toggled -- Check button toggling
---
-   procedure Unicode_Toggled
-            (Widget : access Gtk_Widget_Record'Class
-            ) is
-   begin
-      Oscilloscope.Set_Superscript (Unicode_Check.Get_Active);
-   end Unicode_Toggled;
---
---  Autoscale_Toggled -- Check button toggling
---
-   procedure Autoscale_Toggled
-            (Widget : access Gtk_Widget_Record'Class
-            ) is
-   begin
-      Oscilloscope.Set_Auto_Scaling (Left, Autoscale_Check.Get_Active);
-   end Autoscale_Toggled;
---
---  Circumvention of accessibility checks
---
-   type Local_Widget_Callback is access procedure
-         (Widget : access Gtk_Widget_Record'Class
-         );
-   function "+" is
-      new Ada.Unchecked_Conversion
-         (Local_Widget_Callback,
-            Cb_Gtk_Toggle_Button_Void
-         );
-   function "+" is
-      new Ada.Unchecked_Conversion
-         (Local_Widget_Callback,
-            Cb_Gtk_Button_Void
-         );
+   
    type Local_Delete_Callback is access function
         (Widget : access Gtk_Widget_Record'Class;
             Event  : Gdk_Event
@@ -184,173 +109,102 @@ procedure User_Interface is
          );
 begin
    Gtk.Main.Init;
+   --  Gtk.Main.Router.GNAT_Stack.Set_Log_Trace ("Gtk");
+   --  Gtk.Main.Router.GNAT_Stack.Set_Log_Trace ("GLib-GObject");
+   --  Gtk.Main.Router.GNAT_Stack.Set_Log_Trace ("GtkAda+");
    Gtk.Window.Gtk_New (Window);
-   Gtk.Main.Router.Init (Window); --  Initialize routing
-   Window.Set_Title ("AdaScope");
-   Window.On_Delete_Event (+Delete_Event'Access);
+   Gtk.Main.Router.Init (Window);
+   Window.Set_Title ("Test Ada industrial control widget library");
+   Window.On_Delete_Event (Gtk.Missed.Delete_Event_Handler'Access);
    Window.On_Destroy (Gtk.Missed.Destroy_Handler'Access);
 
    declare
-      Main_Box : Gtk_Hbox;
+      Pane      : Gtk_HBox;
+      Panels    : Gtk_Table;
+      Frame     : Gtk_Frame;
+      Generator : Wave_Generator;
+      Channel   : Channel_Number;
+      Channels  : Gtk_Oscilloscope_Channels_Panel;
+
    begin
-      Gtk_New_Hbox (Main_Box);
-      Main_Box.Set_Spacing (3);
-      Main_Box.Set_Border_Width (3);
-      Add (Window, Main_Box);
-      declare  --  Box on the left
-         Left_Box : Gtk_Vbox;
+      Gtk_New_HBox (Pane);
+      Pane.Set_Spacing (3);
+      Window.Add (Pane);
+
+      Gtk_New(Widget=> Oscilloscope);
+      Oscilloscope.Set_Manual_Sweep (False);
+      --
+      --  Configuring the lower axis
+      --
+      Oscilloscope.Set_Frozen     (Lower, True);  --  No sweeping
+      Oscilloscope.Set_Time_Scale (Lower, False); --  No scale (slider)
+      Oscilloscope.Set_Time_Grid  (Lower, True);  --  Grid
+      Oscilloscope.Set_Time_Axis
+      (Lower,
+         True,  --  Visible
+         False  --  As plain numbers
+      );
+
+      declare
       begin
-         Gtk_New_Vbox (Left_Box);
-         Left_Box.Set_Spacing (3);
-         Main_Box.Pack_Start (Left_Box, False, False);
-         declare --  Parameters in the left box
-            Parameters : Gtk_Table;
-            procedure Create
-                      (Edit   : out Gtk_Entry;
-                        Row   : Guint;
-                        Label : String;
-                        Init  : String
-                      ) is
-               Annotation : Gtk_Label;
-            begin
-               Gtk_New (Annotation, Label);
-               Annotation.Set_Halign (Align_End);
-               Annotation.Set_Valign (Align_Center);
-               Parameters.Attach
-               (Annotation,
-                  0, 1, Row, Row + 1,
-                  Xoptions => Fill,
-                  Yoptions => Shrink
-               );
-               Gtk_New (Edit);
-               Edit.Set_Width_Chars (10);
-               if Find_Property (Edit, "max-width-chars") /= null then
-                  Set_Property
-                  (Edit,
-                     Build ("max-width-chars"),
-                     Gint'(10)
-                  );
-               end if;
-               Edit.Set_Text (Init);
-               Parameters.Attach
-               (Edit,
-                  1, 2, Row, Row + 1,
-                  Xoptions => Fill or Expand,
-                  Yoptions => Shrink
-               );
-            end Create;
-         begin
-            Gtk_New (Parameters, 6, 2, False);
-            Parameters.Set_Row_Spacings (3);
-            Parameters.Set_Col_Spacings (3);
-            Left_Box.Pack_Start (Parameters);
-            Create (Start_Frequency, 0, "Start frequency", "-10.50");
-            Create (Stop_Frequency,  1, "Stop frequency",  "100");
-            Create (Steps,           2, "Steps",           "300");
-            declare
-               Label : Gtk_Label;
-            begin
-               Gtk_New (Label, "Autoscale Y");
-               Label.Set_Halign (Align_End);
-               Label.Set_Valign (Align_Center);
-               Parameters.Attach
-               (Label,
-                  0, 1, 4, 5,
-                  Xoptions => Fill,
-                  Yoptions => Shrink
-               );
-               Gtk_New (Autoscale_Check);
-               Autoscale_Check.Set_Active (True);
-               Parameters.Attach
-               (Autoscale_Check,
-                  1, 2, 4, 5,
-                  Xoptions => Fill,
-                  Yoptions => Shrink
-               );
-               Autoscale_Check.On_Toggled (+Autoscale_Toggled'Access);
-            end;
-            declare
-               Label : Gtk_Label;
-            begin
-               Gtk_New (Label, "Use Unicode");
-               Label.Set_Halign (Align_End);
-               Label.Set_Valign (Align_Center);
-               Parameters.Attach
-               (Label,
-                  0, 1, 5, 6,
-                  Xoptions => Fill,
-                  Yoptions => Shrink
-               );
-               Gtk_New (Unicode_Check);
-               Unicode_Check.Set_Active (True);
-               Parameters.Attach
-               (Unicode_Check,
-                  1, 2, 5, 6,
-                  Xoptions => Fill,
-                  Yoptions => Shrink
-               );
-               Unicode_Check.On_Toggled (+Unicode_Toggled'Access);
-            end;
-         end;
-         declare --  Start and stop buttons in the left box
-            Box : Gtk_Hbox;
-         begin
-            Gtk_New_Hbox (Box);
-            Box.Set_Spacing (3);
-            Left_Box.Pack_Start (Box, False, False);
-            Gtk_New (Play_Button, "Play");
-            Box.Pack_Start (Play_Button, False, False);
-            Play_Button.On_Clicked (+Play_Clicked'Access);
-            Gtk_New (Pause_Button, "Stop");
-            Box.Pack_Start (Pause_Button, False, False);
-            Pause_Button.On_Clicked (+Pause_Clicked'Access);
-            Pause_Button.Set_Sensitive (False);
-         end;
-      end;
-      declare --  Frame with the oscilloscope on the right
-         Frame : Gtk_Frame;
-      begin
-         Gtk_New (Frame);
-         Frame.Set_Shadow_Type (Shadow_In);
-         Main_Box.Pack_Start (Frame);
-         Gtk_New (Oscilloscope);
-         Frame.Add (Oscilloscope);
-         Oscilloscope.Set_Manual_Sweep (False);
-         --
-         --  Configuring the lower axis
-         --
-         Oscilloscope.Set_Frozen     (Lower, True);  --  No sweeping
-         Oscilloscope.Set_Time_Scale (Lower, False); --  No scale (slider)
-         Oscilloscope.Set_Time_Grid  (Lower, True);  --  Grid
-         Oscilloscope.Set_Time_Axis
-         (Lower,
-            True,  --  Visible
-            False  --  As plain numbers
-         );
-         --
-         --  Adding the channel
-         --
-         Curve :=
+         Channel_1 :=
             Add_Channel
-            (Widget  => Oscilloscope,
-               Mode    => Gtk.Layered.Linear, --  Linear interpolation
-               Color   => RGB (0.0, 0.0, 0.7),
+            (  Widget => Oscilloscope,
+               Mode    => Gtk.Layered.Linear,
                Sweeper => Lower
             );
-         --
-         --  Configuring the left axis for this channel (and its group)
-         --
-         Oscilloscope.Set_Group (Left, Oscilloscope.Get_Group (Curve));
-         Oscilloscope.Set_Values_Axis  (Left, True);
-         Oscilloscope.Set_Values_Scale (Left, True);
-         Oscilloscope.Set_Values_Grid  (Left, True);
-         Oscilloscope.Set_Values_Axis_Width (Left, 80);
+         Channel_2 :=
+            Add_Channel
+            (  Widget => Oscilloscope,
+               Mode    => Gtk.Layered.Linear,
+               Sweeper => Lower,
+               Group    => Oscilloscope.Get_Group (Channel_1)
+            );
+         Channel_3 :=
+            Add_Channel
+            (  Widget => Oscilloscope,
+               Mode    => Gtk.Layered.Linear,
+               Sweeper => Lower,
+               Group    => Oscilloscope.Get_Group (Channel_1)
+            );
       end;
+      --
+      -- Configuring the left axis for this channel (and its group)
+      --
+      Oscilloscope.Set_Group (Left, Oscilloscope.Get_Group (Channel_1));
+      Oscilloscope.Set_Values_Axis  (Left, True);
+      Oscilloscope.Set_Values_Scale (Left, True);
+      Oscilloscope.Set_Values_Grid  (Left, True);
+      Oscilloscope.Set_Values_Axis_Width (Left, 80);
+
+      Gtk_New (Frame);
+      Pane.Pack_Start (Frame);
+      Frame.Set_Border_Width (3);
+      Frame.Add (Oscilloscope);
+      Frame.Set_Size_Request (300, 210);
+
+      Gtk_New (Panels, 3, 1, False);
+      Panels.Set_Col_Spacings (3);
+      Panels.Set_Row_Spacings (3);
+      Pane.Pack_Start (Panels, False, False);
+
+      -- Channels
+      Gtk_New (Frame, "Channels");
+      Panels.Attach (Frame, 0, 1, 0, 3);
+      Gtk_New (Channels, Oscilloscope);
+      Channels.Set_Border_Width (3);
+      Frame.Add (Channels);
+
    end;
-   Start_Oscilloscope;
-   Window.Set_Default_Size (800, 400);
+   declare
+   begin
+      Start_Oscilloscope;
+   end;
+   Put_Line ("Channels connected");
+   Window.Set_Default_Size (1200, 600);
    Show_All (Window);
    Gtk.Main.Main;
+   Put_Line ("Window closed");
 exception
    when Error : others =>
       Put_Line ("Error: " & Exception_Information (Error));
