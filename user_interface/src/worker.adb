@@ -44,8 +44,8 @@ package body Worker is
          Z := Random (gen);
          Scope.Feed
                (Channel => Channel,
-                  T     => Gdouble (Float (X) * Float (Z)),
-                  V     => Gdouble (Y)
+                  T     => Gdouble (X),
+                  V     => Gdouble (Float (Y) * Float (Z))
                );
          X := X + 1;
          Y := Y + 1;
@@ -72,7 +72,7 @@ package body Worker is
          do
             Process.Scope    := Scope;
             Process.Channel  := Channel;
-            Put_Line ("Ch "& Channel_Number'Image (Channel));
+            Put_Line ("Start ch " & Channel_Number'Image (Channel));
          end Start;
       or accept Stop;
          raise Quit_Error;
@@ -81,35 +81,29 @@ package body Worker is
 
       --  Looping
       while True loop
-         --  
+         --
          --  Updating each 200ms
-         --  
+         --
          if Clock - Last_Time > 0.2 then
             select
-               --  accept Pause do--  Check if existing is requested
-               --     Paused := True;
-               --  end Pause;
-               --  or accept Play do
-               --     Paused := False;
-               --  end Play;
-               accept Stop do
-                  raise Quit_Error;
-               end Stop;
+               accept Stop; -- Check if existing is requested
+               raise Quit_Error;
             else
                Last_Time := Clock;
-               --  if not Paused then
-               Feed_UART_Data(Scope, Channel);
-               --  end if;
+               Feed_UART_Data (Scope, Channel);
             end select;
          end if;
 
       end loop;
+      Put_Line ("Invalid loop end ch " & Channel_Number'Image (Channel));
       --  return;
       accept Stop;
    exception
       when Quit_Error | Busy_Error => --  Main loop quitted, we follow
+         Put_Line ("Quit ch " & Channel_Number'Image (Channel));
          null;
       when Error : others =>
+         Put_Line ("Error ch " & Channel_Number'Image (Channel));
          Say (Exception_Information (Error));
       Put_Line ("Ending process");
    end Process;

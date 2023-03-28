@@ -6,8 +6,6 @@ package Worker is
 -- Process -- Calculation process task
 --
    task type Process is
-      --  entry Play;
-      --  entry Pause;
    --
    -- Start -- Computations with the parameters specified
    --
@@ -16,8 +14,8 @@ package Worker is
    --
       entry Start
             (
-               Scope       : Gtk_Oscilloscope;
-               Channel    : Channel_Number
+               scope    : Gtk_Oscilloscope;
+               channel  : Channel_Number
             );
    --
    -- Stop -- Terminate the task prematurely

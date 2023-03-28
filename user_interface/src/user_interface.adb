@@ -1,25 +1,16 @@
-with Gtk.Toggle_Button;     use Gtk.Toggle_Button;
 with Gtk.Oscilloscope;      use Gtk.Oscilloscope;
-with Gtk.Check_Button;      use Gtk.Check_Button;
-with Glib.Properties;       use Glib.Properties;
 with Ada.Exceptions;        use Ada.Exceptions;
-with Test_Generator;        use Test_Generator;
 with Ada.Text_IO;           use Ada.Text_IO;
-with Gtk.Button;            use Gtk.Button;
-with Gtk.GEntry;            use Gtk.GEntry;
 with Gtk.Missed;            use Gtk.Missed;
 with Gtk.Widget;            use Gtk.Widget;
 with Gtk.Window;            use Gtk.Window;
-with Gdk.Event;             use Gdk.Event;
 with Gtk.Enums;             use Gtk.Enums;
 with Gtk.Frame;             use Gtk.Frame;
-with Gtk.Label;             use Gtk.Label;
 with Gtk.Table;             use Gtk.Table;
 with Gtk.Box;               use Gtk.Box;
 with Glib;                  use Glib;
 
 with Gtk.Oscilloscope.Channels_Panel; use Gtk.Oscilloscope.Channels_Panel;
-with Gtk.Main.Router.GNAT_Stack;
 with Ada.Unchecked_Conversion;
 with Gtk.Layered;
 with Gtk.Main.Router;
@@ -37,10 +28,7 @@ procedure User_Interface is
 --
 --  Delete_Event -- Window closing notification event
 --
-   function Delete_Event
-            (Widget  : access Gtk_Widget_Record'Class;
-               Event : Gdk_Event
-            )  return Boolean is
+   function Delete_Event return Boolean is
    begin
       Writer_Ch_1.Stop; -- Stop the computation process
       Writer_Ch_2.Stop; -- Stop the computation process
@@ -60,8 +48,8 @@ procedure User_Interface is
       To    : Gdouble;
       Width : Gdouble;
    begin
-      From  := Gdouble(0);
-      To    := Gdouble(100);
+      From  := Gdouble (0);
+      To    := Gdouble (100);
       Width := To - From;
 
       --  Set page size of the scope
@@ -97,11 +85,8 @@ procedure User_Interface is
       when Error : others =>
          Say (Exception_Information (Error));
    end Start_Oscilloscope;
-   
-   type Local_Delete_Callback is access function
-        (Widget : access Gtk_Widget_Record'Class;
-            Event  : Gdk_Event
-        ) return Boolean;
+
+   type Local_Delete_Callback is access function  return Boolean;
    function "+" is
       new Ada.Unchecked_Conversion
          (Local_Delete_Callback,
@@ -115,23 +100,21 @@ begin
    Gtk.Window.Gtk_New (Window);
    Gtk.Main.Router.Init (Window);
    Window.Set_Title ("Test Ada industrial control widget library");
-   Window.On_Delete_Event (Gtk.Missed.Delete_Event_Handler'Access);
+   Window.On_Delete_Event (+Delete_Event'Access);
    Window.On_Destroy (Gtk.Missed.Destroy_Handler'Access);
 
    declare
-      Pane      : Gtk_HBox;
+      Pane      : Gtk_Hbox;
       Panels    : Gtk_Table;
       Frame     : Gtk_Frame;
-      Generator : Wave_Generator;
-      Channel   : Channel_Number;
       Channels  : Gtk_Oscilloscope_Channels_Panel;
 
    begin
-      Gtk_New_HBox (Pane);
+      Gtk_New_Hbox (Pane);
       Pane.Set_Spacing (3);
       Window.Add (Pane);
 
-      Gtk_New(Widget=> Oscilloscope);
+      Gtk_New (Widget => Oscilloscope);
       Oscilloscope.Set_Manual_Sweep (False);
       --
       --  Configuring the lower axis
@@ -149,27 +132,27 @@ begin
       begin
          Channel_1 :=
             Add_Channel
-            (  Widget => Oscilloscope,
-               Mode    => Gtk.Layered.Linear,
-               Sweeper => Lower
+            (Widget     => Oscilloscope,
+               Mode     => Gtk.Layered.Linear,
+               Sweeper  => Lower
             );
          Channel_2 :=
             Add_Channel
-            (  Widget => Oscilloscope,
-               Mode    => Gtk.Layered.Linear,
-               Sweeper => Lower,
+            (Widget     => Oscilloscope,
+               Mode     => Gtk.Layered.Linear,
+               Sweeper  => Lower,
                Group    => Oscilloscope.Get_Group (Channel_1)
             );
          Channel_3 :=
             Add_Channel
-            (  Widget => Oscilloscope,
-               Mode    => Gtk.Layered.Linear,
-               Sweeper => Lower,
+            (Widget     => Oscilloscope,
+               Mode     => Gtk.Layered.Linear,
+               Sweeper  => Lower,
                Group    => Oscilloscope.Get_Group (Channel_1)
             );
       end;
       --
-      -- Configuring the left axis for this channel (and its group)
+      --  Configuring the left axis for this channel (and its group)
       --
       Oscilloscope.Set_Group (Left, Oscilloscope.Get_Group (Channel_1));
       Oscilloscope.Set_Values_Axis  (Left, True);
@@ -184,13 +167,12 @@ begin
       Frame.Set_Size_Request (300, 210);
 
       Gtk_New (Panels, 3, 1, False);
-      Panels.Set_Col_Spacings (3);
-      Panels.Set_Row_Spacings (3);
       Pane.Pack_Start (Panels, False, False);
 
-      -- Channels
+      --  Channels
       Gtk_New (Frame, "Channels");
-      Panels.Attach (Frame, 0, 1, 0, 3);
+      Panels.Add (Frame);
+      --  Panels.Attach (Frame, 0, 1, 0, 3);
       Gtk_New (Channels, Oscilloscope);
       Channels.Set_Border_Width (3);
       Frame.Add (Channels);
