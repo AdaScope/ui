@@ -4,6 +4,7 @@ with Gtk.Main.Router;   use Gtk.Main.Router;
 with Ada.Numerics;     use Ada.Numerics;
 with Ada.Text_IO;       use Ada.Text_IO;
 with Glib;              use Glib;
+with Uart;
 
 with Ada.Numerics.Long_Elementary_Functions;
 use  Ada.Numerics.Long_Elementary_Functions;
@@ -16,7 +17,8 @@ package body Worker is
    --  X and Y to be replaced with Data_Points objects
    --
    X : Integer := 0;
-   Y : Long_Float := 0.0;
+   Y : Float := 0.0;
+   Readings : Uart.Readings_Array (1 .. 100);
 
    --
    --  Feeding data to oscilloscope
@@ -27,10 +29,12 @@ package body Worker is
    begin
       --
       --  Get data from UART
+      Readings := Uart.Read (Number_Of_Samples => 100, Port_Location => "/dev/ttyACM0");
+       
       --
       for n in 0 .. 100 loop
          X := n;
-         Y := 10.0 * Sin (Long_Float (Float (2.0 * 0.1 * Pi * X) + Float (Channel)));
+         Y := Readings (n);
          --  Put_Line("Channel " & Channel_Number'Image (Channel) & " - " & Integer'Image (X) & " - " & Long_Float'Image (Y));
          Scope.Feed
                (Channel => Channel,
