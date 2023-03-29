@@ -61,24 +61,24 @@ procedure User_Interface is
          Page_Increment => Width / 10.0,
          Page_Size      => Width
       );
-         --  Initiate writing process
+      --  Initiate writing process
       Writer_Ch_1.Start
       (
          Oscilloscope,
          Channel_1
       );
-         --  Initiate writing process
+      --  Initiate writing process
       Writer_Ch_2.Start
       (
          Oscilloscope,
          Channel_2
       );
-         --  Initiate writing process
-      Writer_Ch_3.Start
-      (
-         Oscilloscope,
-         Channel_3
-      );
+      --  Initiate writing process
+      --  Writer_Ch_3.Start
+      --  (
+      --     Oscilloscope,
+      --     Channel_3
+      --  );
    exception
       when Error : Data_Error =>
          Say (Exception_Message (Error));
@@ -99,34 +99,39 @@ begin
    --  Gtk.Main.Router.GNAT_Stack.Set_Log_Trace ("GtkAda+");
    Gtk.Window.Gtk_New (Window);
    Gtk.Main.Router.Init (Window);
-   Window.Set_Title ("Test Ada industrial control widget library");
+   Window.Set_Title ("AdaScope");
    Window.On_Delete_Event (+Delete_Event'Access);
    Window.On_Destroy (Gtk.Missed.Destroy_Handler'Access);
 
    declare
-      Pane      : Gtk_Hbox;
-      Panels    : Gtk_Table;
-      Frame     : Gtk_Frame;
-      Channels  : Gtk_Oscilloscope_Channels_Panel;
+      Pane      : Gtk_Hbox;                        --  Main panel
+      Panels    : Gtk_Table;                       --  Right half, channels
+      Frame     : Gtk_Frame;                       --  Left half, oscilloscope
+      Channels  : Gtk_Oscilloscope_Channels_Panel; --  Channel checkboxes
 
    begin
+      --
+      --  Setting up the main window pane
+      --
       Gtk_New_Hbox (Pane);
       Pane.Set_Spacing (3);
       Window.Add (Pane);
-
+      --
+      --  Initialize oscilloscope widget
+      --
       Gtk_New (Widget => Oscilloscope);
       Oscilloscope.Set_Manual_Sweep (False);
       --
       --  Configuring the lower axis
+      --    No sweeping
+      --    No scale (slider)
+      --    Grid
+      --    Visible as plain numbers
       --
-      Oscilloscope.Set_Frozen     (Lower, True);  --  No sweeping
-      Oscilloscope.Set_Time_Scale (Lower, False); --  No scale (slider)
-      Oscilloscope.Set_Time_Grid  (Lower, True);  --  Grid
-      Oscilloscope.Set_Time_Axis
-      (Lower,
-         True,  --  Visible
-         False  --  As plain numbers
-      );
+      Oscilloscope.Set_Frozen       (Lower, True);
+      Oscilloscope.Set_Time_Scale   (Lower, False);
+      Oscilloscope.Set_Time_Grid    (Lower, True);
+      Oscilloscope.Set_Time_Axis    (Lower, True, False);
 
       declare
       begin
@@ -172,7 +177,6 @@ begin
       --  Channels
       Gtk_New (Frame, "Channels");
       Panels.Add (Frame);
-      --  Panels.Attach (Frame, 0, 1, 0, 3);
       Gtk_New (Channels, Oscilloscope);
       Channels.Set_Border_Width (3);
       Frame.Add (Channels);

@@ -1,29 +1,22 @@
 with Ada.Calendar;      use Ada.Calendar;
 with Ada.Exceptions;    use Ada.Exceptions;
-with Glib;              use Glib;
 with Gtk.Main.Router;   use Gtk.Main.Router;
-with Ada.Numerics.Discrete_Random;
-
+with Ada.Numerics;     use Ada.Numerics;
 with Ada.Text_IO;       use Ada.Text_IO;
+with Glib;              use Glib;
+
+with Ada.Numerics.Long_Elementary_Functions;
+use  Ada.Numerics.Long_Elementary_Functions;
+
 --  with Data_structures;
 
 package body Worker is
-
-   --  Paused : Boolean := False;
-
    --
    --  Temporary
    --  X and Y to be replaced with Data_Points objects
-   --  Z and random generator to be removed
    --
    X : Integer := 0;
-   Y : Integer := 0;
-
-   type randRange is new Integer range 1 .. 100;
-   package Rand_Int is new Ada.Numerics.Discrete_Random (randRange);
-   use Rand_Int;
-   gen : Generator;
-   Z : randRange;
+   Y : Long_Float := 0.0;
 
    --
    --  Feeding data to oscilloscope
@@ -35,20 +28,15 @@ package body Worker is
       --
       --  Get data from UART
       --
-      --  v  Temporary, for testing purposes  v
-      X := 0;
-      Y := 0;
-      --  ^  Temporary, for testing purposes  ^
       for n in 0 .. 100 loop
-         Reset (gen);
-         Z := Random (gen);
+         X := n;
+         Y := 10.0 * Sin (Long_Float (Float (2.0 * 0.1 * Pi * X) + Float (Channel)));
+         --  Put_Line("Channel " & Channel_Number'Image (Channel) & " - " & Integer'Image (X) & " - " & Long_Float'Image (Y));
          Scope.Feed
                (Channel => Channel,
                   T     => Gdouble (X),
-                  V     => Gdouble (Float (Y) * Float (Z))
+                  V     => Gdouble (Y)
                );
-         X := X + 1;
-         Y := Y + 1;
       end loop;
 
    end Feed_UART_Data;
