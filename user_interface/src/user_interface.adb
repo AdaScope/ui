@@ -68,11 +68,11 @@ procedure User_Interface is
          Channel_1
       );
       --  Initiate writing process
-      Writer_Ch_2.Start
-      (
-         Oscilloscope,
-         Channel_2
-      );
+      --  Writer_Ch_2.Start
+      --  (
+      --     Oscilloscope,
+      --     Channel_2
+      --  );
       --  Initiate writing process
       --  Writer_Ch_3.Start
       --  (

@@ -2,7 +2,6 @@ with "config/user_interface_config.gpr";
 project User_Interface is
 
    for Source_Dirs use ("src/",
-                        "src/examples",
                         "src/data_structures",
                         "src/uart",
                         "src/worker",
