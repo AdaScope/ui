@@ -32,10 +32,9 @@ package body Uart is
          Line (I) := '0';
       end loop;
 
-      --  Open the port
-      GNAT.Serial_Communications.Open (Port => Port, Name => Port_Location);
-
-      --  Change the settings
+      GNAT.Serial_Communications.Open
+        (Port => Port,
+         Name => Port_Location);
       GNAT.Serial_Communications.Set
         (Port => Port,
          Rate => GNAT.Serial_Communications.B115200);
@@ -49,16 +48,17 @@ package body Uart is
       --  Run until the we gathered the required number of samples
       while Counter < Number_Of_Samples + 1 loop
          begin
-            --  Read data from the port
+
             GNAT.Serial_Communications.Read (Port, Buffer, Offset);
 
+            --  Store the reading in the Char variable
             Char := Character'Val (Buffer (1));
 
+            --  If we read the end of the line
+            --  and we are not a the beginning of a line
             if Char = ASCII.LF and then Line_Index /= 1 then
-               --  We write our entire line to the terminal (optional)
-               --  Put_Line (Line (Line'First .. Line_Index - 1));
 
-               --  We save the reading to a table
+               --  We save the reading to an array
                Ada.Float_Text_IO.Get
                  (From => Line,
                   Item => Readings (Counter),
@@ -67,22 +67,22 @@ package body Uart is
                --  We reset the line index and increment the counter
                Line_Index := Line'First;
                Counter := Counter + 1;
+
+            --  If we are not a the end of the line
             elsif Char /= ASCII.LF then
+
                --  We write the current character to
-               --  the current index of our line
+               --  the current index of our line and increment the line
                Line (Line_Index) := Char;
                Line_Index := Line_Index + 1;
             end if;
          exception
             when Ada.IO_Exceptions.Data_Error =>
-               Put_Line ("Error");
+               Put_Line ("Data error");
+               Put_Line ("Line: " & Line (Line'First .. Line_Index - 1));
          end;
       end loop;
-      --  Close the port
       GNAT.Serial_Communications.Close (Port);
-
-      --  Return the readings
       return Readings;
    end Read;
-
 end Uart;

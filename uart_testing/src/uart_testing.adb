@@ -2,21 +2,21 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Uart;
 
 procedure Uart_Testing is
-   Values : Uart.Readings_Array (1 .. 10);
-   Values1 : Uart.Readings_Array (1 .. 10);
-   Values2 : Uart.Readings_Array (1 .. 10);
-   Values3 : Uart.Readings_Array (1 .. 10);
-   Values4 : Uart.Readings_Array (1 .. 10);
-   Values5 : Uart.Readings_Array (1 .. 10);
-   Values6 : Uart.Readings_Array (1 .. 10);
+   Values : Uart.Readings_Array (1 .. 100);
+   Values1 : Uart.Readings_Array (1 .. 100);
+   Values2 : Uart.Readings_Array (1 .. 100);
+   Values3 : Uart.Readings_Array (1 .. 100);
+   Values4 : Uart.Readings_Array (1 .. 100);
+   Values5 : Uart.Readings_Array (1 .. 100);
+   Values6 : Uart.Readings_Array (1 .. 100);
 begin
-   Values := Uart.Read (10, "/dev/ttyACM0");
-   Values1 := Uart.Read (10, "/dev/ttyACM0");
-   Values2 := Uart.Read (10, "/dev/ttyACM0");
-   Values3 := Uart.Read (10, "/dev/ttyACM0");
-   Values4 := Uart.Read (10, "/dev/ttyACM0");
-   Values5 := Uart.Read (10, "/dev/ttyACM0");
-   Values6 := Uart.Read (10, "/dev/ttyACM0");
+   Values := Uart.Read (100, "/dev/ttyACM0");
+   Values1 := Uart.Read (100, "/dev/ttyACM0");
+   Values2 := Uart.Read (100, "/dev/ttyACM0");
+   Values3 := Uart.Read (100, "/dev/ttyACM0");
+   Values4 := Uart.Read (100, "/dev/ttyACM0");
+   Values5 := Uart.Read (100, "/dev/ttyACM0");
+   Values6 := Uart.Read (100, "/dev/ttyACM0");
 
    for I of Values loop
       Put_Line (Float'Image (I));
