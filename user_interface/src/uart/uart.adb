@@ -76,11 +76,9 @@ package body Uart is
                Line (Line_Index) := Char;
                Line_Index := Line_Index + 1;
             end if;
-            Put_Line ("Full line: " & Line);
          exception
             when Ada.IO_Exceptions.Data_Error =>
                Put_Line ("Data error");
-               Put_Line ("Line: " & Line);
          end;
       end loop;
       GNAT.Serial_Communications.Close (Port);
