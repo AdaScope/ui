@@ -20,9 +20,7 @@ package body Worker is
    Y : Float := 0.0;
    Readings : Uart.Readings_Array (1 .. 100);
 
-   --
    --  Feeding data to oscilloscope
-   --
    procedure Feed_UART_Data (
       Scope : Gtk_Oscilloscope;
       Channel   : Channel_Number) is
@@ -31,8 +29,8 @@ package body Worker is
       --  Get data from UART
       Readings := Uart.Read (Number_Of_Samples => 100, Port_Location => "/dev/ttyACM0");
        
-      --
-      for n in 0 .. 100 loop
+      for n in 1 .. 100 loop
+         Put_Line (Integer'Image (n));
          X := n;
          Y := Readings (n);
          --  Put_Line("Channel " & Channel_Number'Image (Channel) & " - " & Integer'Image (X) & " - " & Long_Float'Image (Y));
