@@ -1,25 +1,21 @@
 with Ada.Calendar;      use Ada.Calendar;
 with Ada.Exceptions;    use Ada.Exceptions;
 with Gtk.Main.Router;   use Gtk.Main.Router;
-with Ada.Numerics;      use Ada.Numerics;
 with Ada.Text_IO;       use Ada.Text_IO;
 with Glib;              use Glib;
 with Uart;
-
-with Ada.Numerics.Long_Elementary_Functions;
-use  Ada.Numerics.Long_Elementary_Functions;
 
 --  with Data_structures;
 
 package body Worker is
 
-   --  Variables for data collection 
+   --  Variables for data collection
    X : Integer := 0;
    Y : Float := 0.0;
-   Number_Of_Samples : Integer := 100;
+   Number_Of_Samples : constant Integer := 100;
 
    --  Array for storing the data from the board
-   Readings : Uart.Readings_Array (Number_Of_Samples);
+   Readings : Uart.Readings_Array (1 .. Number_Of_Samples);
 
    --  Feeding data to oscilloscope
    procedure Feed_UART_Data (
@@ -28,8 +24,10 @@ package body Worker is
    begin
 
       --  Get data from UART
-      Readings := Uart.Read (Number_Of_Samples => Number_Of_Samples, Port_Location => "/dev/ttyACM0");
-       
+      Readings := Uart.Read
+        (Number_Of_Samples => Number_Of_Samples,
+         Port_Location => "/dev/ttyACM0");
+
       --  Feed data to the graph
       for N in 1 .. Number_Of_Samples loop
          X := N;
@@ -57,7 +55,7 @@ package body Worker is
          do
             Process.Scope    := Scope;
             Process.Channel  := Channel;
-            Put_Line ("Start ch" & Channel_Number'Image (Channel));
+            Put_Line ("Start channel" & Channel_Number'Image (Channel));
          end Start;
 
       or accept Stop;
@@ -80,16 +78,16 @@ package body Worker is
          end if;
 
       end loop;
-      Put_Line ("Invalid loop end ch" & Channel_Number'Image (Channel));
+      Put_Line ("Invalid loop end channel" & Channel_Number'Image (Channel));
       accept Stop;
 
    exception
       when Quit_Error | Busy_Error => --  Main loop quitted, we follow
-         Put_Line ("Quit ch" & Channel_Number'Image (Channel));
+         Put_Line ("Quit channel" & Channel_Number'Image (Channel));
          null;
 
       when Error : others =>
-         Put_Line ("Error ch" & Channel_Number'Image (Channel));
+         Put_Line ("Error channel" & Channel_Number'Image (Channel));
          Say (Exception_Information (Error));
       Put_Line ("Ending process");
    end Process;
