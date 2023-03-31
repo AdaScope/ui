@@ -62,11 +62,14 @@ procedure User_Interface is
          Page_Increment => Width / 10.0,
          Page_Size      => Width
       );
+      --  Protected object
       --  Initiate writing process channel 1
       Writer_Ch_1.Start
       (
          Oscilloscope,
-         Channel_1
+         Channel_1,
+         Channel_2,
+         Channel_3
       );
       --  Initiate writing process channel 2
       --  Writer_Ch_2.Start
@@ -151,6 +154,7 @@ begin
             (Widget     => Oscilloscope,
                Mode     => Gtk.Layered.Linear,
                Sweeper  => Lower,
+               Color    => RGB (1.0, 0.0, 0.0),
                Group    => Oscilloscope.Get_Group (Channel_1)
             );
          Channel_3 :=
@@ -158,6 +162,7 @@ begin
             (Widget     => Oscilloscope,
                Mode     => Gtk.Layered.Linear,
                Sweeper  => Lower,
+               Color    => RGB (1.0, 0.0, 1.0),
                Group    => Oscilloscope.Get_Group (Channel_1)
             );
       end;

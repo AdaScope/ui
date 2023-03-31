@@ -30,7 +30,7 @@ package body Worker is
       --
       for n in 0 .. 100 loop
          X := n;
-         Y := 10.0 * Sin (Long_Float (Float (2.0 * 0.1 * Pi * X) + Float (Channel)));
+         Y := Sin (Long_Float (Float (2.0 * 0.1 * Pi * X) + Float (Channel)));
          --  Put_Line("Channel " & Channel_Number'Image (Channel) & " - " & Integer'Image (X) & " - " & Long_Float'Image (Y));
          Scope.Feed
                (Channel => Channel,
@@ -48,19 +48,27 @@ package body Worker is
 
    task body Process is
       Scope     : Gtk_Oscilloscope;
-      Channel   : Channel_Number;
+      Channel1   : Channel_Number;
+      Channel2   : Channel_Number;
+      Channel3   : Channel_Number;
       Last_Time : Time := Clock;
 
    begin
       select -- Waiting for parameters or exit request
          accept Start
                 (Scope     : Gtk_Oscilloscope;
-                  Channel  : Channel_Number
+                  Channel1  : Channel_Number;
+                  Channel2  : Channel_Number;
+                  Channel3  : Channel_Number
                 )
          do
             Process.Scope    := Scope;
-            Process.Channel  := Channel;
-            Put_Line ("Start ch " & Channel_Number'Image (Channel));
+            Process.Channel1  := Channel1;
+            Process.Channel2  := Channel2;
+            Process.Channel3  := Channel3;
+            Put_Line ("Start ch " & Channel_Number'Image (Channel1));
+            Put_Line ("Start ch " & Channel_Number'Image (Channel2));
+            Put_Line ("Start ch " & Channel_Number'Image (Channel3));
          end Start;
       or accept Stop;
          raise Quit_Error;
@@ -78,20 +86,22 @@ package body Worker is
                raise Quit_Error;
             else
                Last_Time := Clock;
-               Feed_UART_Data (Scope, Channel);
+               Feed_UART_Data (Scope, Channel1);
+               Feed_UART_Data (Scope, Channel2);
+               Feed_UART_Data (Scope, Channel3);
             end select;
          end if;
 
       end loop;
-      Put_Line ("Invalid loop end ch " & Channel_Number'Image (Channel));
+      Put_Line ("Invalid loop end ch " & Channel_Number'Image (Channel1));
       --  return;
       accept Stop;
    exception
       when Quit_Error | Busy_Error => --  Main loop quitted, we follow
-         Put_Line ("Quit ch " & Channel_Number'Image (Channel));
+         Put_Line ("Quit ch " & Channel_Number'Image (Channel1));
          null;
       when Error : others =>
-         Put_Line ("Error ch " & Channel_Number'Image (Channel));
+         Put_Line ("Error ch " & Channel_Number'Image (Channel1));
          Say (Exception_Information (Error));
       Put_Line ("Ending process");
    end Process;
