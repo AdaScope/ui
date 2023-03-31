@@ -73,12 +73,14 @@ package body Uart is
 
                --  We write the current character to
                --  the current index of our line and increment the line
+               Put_Line (Line_Index'Image);
                Line (Line_Index) := Char;
                Line_Index := Line_Index + 1;
             end if;
          exception
             when Ada.IO_Exceptions.Data_Error =>
                Put_Line ("Data error");
+               Line_Index := Line_Index - 1;
          end;
       end loop;
       GNAT.Serial_Communications.Close (Port);
