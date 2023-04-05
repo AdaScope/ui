@@ -60,7 +60,7 @@ package body Uart is
 
                --  We save the reading to an array
                Ada.Float_Text_IO.Get
-                 (From => Line,
+                 (From => Line (1 .. Line_Index - 1),
                   Item => Readings (Counter),
                   Last => Line_Index);
 
@@ -73,7 +73,6 @@ package body Uart is
 
                --  We write the current character to
                --  the current index of our line and increment the line
-               Put_Line (Line_Index'Image);
                Line (Line_Index) := Char;
                Line_Index := Line_Index + 1;
             end if;
