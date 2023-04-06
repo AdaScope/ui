@@ -4,6 +4,7 @@ with Ada.Text_IO;           use Ada.Text_IO;
 with Gtk.Missed;            use Gtk.Missed;
 with Gtk.Widget;            use Gtk.Widget;
 with Gtk.Window;            use Gtk.Window;
+with Gdk.Color;             use Gdk.Color;
 with Gtk.Enums;             use Gtk.Enums;
 with Gtk.Frame;             use Gtk.Frame;
 with Gtk.Table;             use Gtk.Table;
@@ -61,19 +62,22 @@ procedure User_Interface is
          Page_Increment => Width / 10.0,
          Page_Size      => Width
       );
-      --  Initiate writing process
+      --  Protected object
+      --  Initiate writing process channel 1
       Writer_Ch_1.Start
       (
          Oscilloscope,
-         Channel_1
+         Channel_1,
+         Channel_2,
+         Channel_3
       );
-      --  Initiate writing process
+      --  Initiate writing process channel 2
       --  Writer_Ch_2.Start
       --  (
       --     Oscilloscope,
       --     Channel_2
       --  );
-      --  Initiate writing process
+      --  Initiate writing process channel 3
       --  Writer_Ch_3.Start
       --  (
       --     Oscilloscope,
@@ -132,6 +136,9 @@ begin
       Oscilloscope.Set_Time_Scale   (Lower, False);
       Oscilloscope.Set_Time_Grid    (Lower, True);
       Oscilloscope.Set_Time_Axis    (Lower, True, False);
+      Oscilloscope.Set_Grid_Colors  (
+         RGB (0.75, 0.75, 0.75), 
+         RGB (0.9, 0.9, 0.9));
 
       declare
       begin
@@ -139,13 +146,15 @@ begin
             Add_Channel
             (Widget     => Oscilloscope,
                Mode     => Gtk.Layered.Linear,
-               Sweeper  => Lower
+               Sweeper  => Lower,
+               Color    => RGB (0.0, 0.0, 1.0)
             );
          Channel_2 :=
             Add_Channel
             (Widget     => Oscilloscope,
                Mode     => Gtk.Layered.Linear,
                Sweeper  => Lower,
+               Color    => RGB (1.0, 0.0, 0.0),
                Group    => Oscilloscope.Get_Group (Channel_1)
             );
          Channel_3 :=
@@ -153,6 +162,7 @@ begin
             (Widget     => Oscilloscope,
                Mode     => Gtk.Layered.Linear,
                Sweeper  => Lower,
+               Color    => RGB (1.0, 0.0, 1.0),
                Group    => Oscilloscope.Get_Group (Channel_1)
             );
       end;

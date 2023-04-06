@@ -32,6 +32,7 @@ package body Worker is
       for N in 1 .. Number_Of_Samples loop
          X := N;
          Y := Readings (N);
+         
          Scope.Feed
                (Channel => Channel,
                   T     => Gdouble (X),
@@ -43,19 +44,27 @@ package body Worker is
    --  Managing pause/play
    task body Process is
       Scope     : Gtk_Oscilloscope;
-      Channel   : Channel_Number;
+      Channel1   : Channel_Number;
+      Channel2   : Channel_Number;
+      Channel3   : Channel_Number;
       Last_Time : Time := Clock;
 
    begin
       select -- Waiting for parameters or exit request
          accept Start
-                (Scope      : Gtk_Oscilloscope;
-                 Channel    : Channel_Number
+                (Scope     : Gtk_Oscilloscope;
+                  Channel1  : Channel_Number;
+                  Channel2  : Channel_Number;
+                  Channel3  : Channel_Number
                 )
          do
             Process.Scope    := Scope;
-            Process.Channel  := Channel;
-            Put_Line ("Start channel" & Channel_Number'Image (Channel));
+            Process.Channel1  := Channel1;
+            Process.Channel2  := Channel2;
+            Process.Channel3  := Channel3;
+            Put_Line ("Start ch " & Channel_Number'Image (Channel1));
+            Put_Line ("Start ch " & Channel_Number'Image (Channel2));
+            Put_Line ("Start ch " & Channel_Number'Image (Channel3));
          end Start;
 
       or accept Stop;
@@ -73,7 +82,9 @@ package body Worker is
                raise Quit_Error;
             else
                Last_Time := Clock;
-               Feed_UART_Data (Scope, Channel);
+               Feed_UART_Data (Scope, Channel1);
+               Feed_UART_Data (Scope, Channel2);
+               Feed_UART_Data (Scope, Channel3);
             end select;
          end if;
 
