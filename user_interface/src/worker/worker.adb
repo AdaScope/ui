@@ -32,7 +32,7 @@ package body Worker is
       for N in 1 .. Number_Of_Samples loop
          X := N;
          Y := Readings (N);
-         
+
          Scope.Feed
                (Channel => Channel,
                   T     => Gdouble (X),
@@ -62,9 +62,7 @@ package body Worker is
             Process.Channel1  := Channel1;
             Process.Channel2  := Channel2;
             Process.Channel3  := Channel3;
-            Put_Line ("Start ch " & Channel_Number'Image (Channel1));
-            Put_Line ("Start ch " & Channel_Number'Image (Channel2));
-            Put_Line ("Start ch " & Channel_Number'Image (Channel3));
+            Put_Line ("Start process");
          end Start;
 
       or accept Stop;
@@ -89,16 +87,16 @@ package body Worker is
          end if;
 
       end loop;
-      Put_Line ("Invalid loop end channel" & Channel_Number'Image (Channel));
+      Put_Line ("Invalid loop end");
       accept Stop;
 
    exception
       when Quit_Error | Busy_Error => --  Main loop quitted, we follow
-         Put_Line ("Quit channel" & Channel_Number'Image (Channel));
+         Put_Line ("Quitting process");
          null;
 
       when Error : others =>
-         Put_Line ("Error channel" & Channel_Number'Image (Channel));
+         Put_Line ("Error in process");
          Say (Exception_Information (Error));
       Put_Line ("Ending process");
    end Process;
