@@ -49,8 +49,8 @@ procedure User_Interface is
       To    : Gdouble;
       Width : Gdouble;
    begin
-      From  := Gdouble (0);
-      To    := Gdouble (100);
+      From  := Gdouble (0);   -- X axis start value
+      To    := Gdouble (100); -- X axis end value
       Width := To - From;
 
       --  Set page size of the scope
@@ -140,6 +140,7 @@ begin
          RGB (0.75, 0.75, 0.75), 
          RGB (0.9, 0.9, 0.9));
 
+
       declare
       begin
          Channel_1 :=
@@ -174,6 +175,8 @@ begin
       Oscilloscope.Set_Values_Scale (Left, True);
       Oscilloscope.Set_Values_Grid  (Left, True);
       Oscilloscope.Set_Values_Axis_Width (Left, 80);
+
+
 
       Gtk_New (Frame);
       Pane.Pack_Start (Frame);
