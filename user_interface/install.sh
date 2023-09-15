@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Make sure the script is not run as root
+if [ "$EUID" -eq 0 ]; then
+  echo "This script should not be run as root. Please run it without sudo."
+  exit 1
+fi
+
 # Get the target directory
 if [ -n "$1" ]; then
     target_directory="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
@@ -23,6 +29,18 @@ if ! dpkg -l | grep -q "^ii  libaicwl-dev "; then
 
     echo "Updating sources and installing aicwl library..."
     sudo apt update && sudo apt install libaicwl-dev -y
+    echo -e "Done!\n"
+fi
+
+# Check if libaicwl package is installed
+if ! dpkg -l | grep -q "^ii  libaicwl "; then
+    echo "Adding new apt source..."
+    filepath=/etc/apt/sources.list.d/aicwl.list
+    sudo sh -c "echo 'deb [trusted=yes] http://www.dmitry-kazakov.de/distributions/ubuntu jammy main' > $filepath"
+    echo -e "Done!\n"
+
+    echo "Updating sources and installing aicwl library..."
+    sudo apt update && sudo apt install libaicwl -y
     echo -e "Done!\n"
 fi
 
