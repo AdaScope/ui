@@ -16,7 +16,7 @@ fi
 if [ -n "$1" ]; then
     target_directory="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 else
-    target_directory="$(pwd)"
+    target_directory="$(pwd)/user_interface"
 fi
 
 # Check if there are any .gpr files in the current directory
