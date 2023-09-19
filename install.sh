@@ -6,6 +6,12 @@ if [ "$EUID" -eq 0 ]; then
   exit 1
 fi
 
+# Make sure Alire is installed
+if ! which alr > /dev/null 2>&1; then
+    echo "alr command not found. Make sure Alire is installed and in your PATH."
+    exit 1
+fi
+
 # Get the target directory
 if [ -n "$1" ]; then
     target_directory="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
