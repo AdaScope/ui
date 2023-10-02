@@ -98,7 +98,7 @@ package body Worker is
       
       when GNAT.Serial_Communications.Serial_Error =>
          Put_Line ("Serial Error");
-         Say ("This is test");
+         Say ("No board was detected. Make sure you connect a board to the host computer before hitting the start button.");
          null;
 
       when Error : others =>
