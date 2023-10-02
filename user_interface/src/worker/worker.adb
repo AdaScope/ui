@@ -4,6 +4,7 @@ with Gtk.Main.Router;   use Gtk.Main.Router;
 with Ada.Text_IO;       use Ada.Text_IO;
 with Glib;              use Glib;
 with Uart;
+with GNAT.Serial_Communications;
 
 --  with Data_structures;
 
@@ -93,6 +94,11 @@ package body Worker is
    exception
       when Quit_Error | Busy_Error => --  Main loop quitted, we follow
          Put_Line ("Quitting process");
+         null;
+      
+      when GNAT.Serial_Communications.Serial_Error =>
+         Put_Line ("Serial Error");
+         Say ("No board was detected. Make sure you connect a board to the host computer before hitting the start button.");
          null;
 
       when Error : others =>
