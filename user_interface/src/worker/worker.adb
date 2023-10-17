@@ -6,8 +6,6 @@ with Glib;              use Glib;
 with Uart;
 with GNAT.Serial_Communications;
 
---  with Data_structures;
-
 package body Worker is
 
    --  Variables for data collection
@@ -26,8 +24,7 @@ package body Worker is
 
       --  Get data from UART
       Readings := Uart.Read
-        (Number_Of_Samples => Number_Of_Samples,
-         Port_Location => "/dev/ttyACM0");
+        (Number_Of_Samples => Number_Of_Samples);
 
       --  Feed data to the graph
       for N in 1 .. Number_Of_Samples loop
@@ -81,6 +78,7 @@ package body Worker is
                raise Quit_Error;
             else
                Last_Time := Clock;
+               -- check if state is connected
                Feed_UART_Data (Scope, Channel1);
                Feed_UART_Data (Scope, Channel2);
                Feed_UART_Data (Scope, Channel3);

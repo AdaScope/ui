@@ -6,8 +6,7 @@ with Ada.Streams;
 package body Uart is
 
    function Read (
-      Number_Of_Samples : Integer;
-      Port_Location : GNAT.Serial_Communications.Port_Name
+      Number_Of_Samples : Integer
       ) return Readings_Array is
 
          --  Initialize the variables for the read
@@ -32,9 +31,6 @@ package body Uart is
          Line (I) := '0';
       end loop;
 
-      GNAT.Serial_Communications.Open
-        (Port => Port,
-         Name => Port_Location);
       GNAT.Serial_Communications.Set
         (Port => Port,
          Rate => GNAT.Serial_Communications.B115200);
