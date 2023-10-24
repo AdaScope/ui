@@ -60,6 +60,10 @@ procedure User_Interface is
                      GNAT.Serial_Communications.Open
                      (Port => Port,
                         Name => Port_Location);
+
+                     GNAT.Serial_Communications.Set
+                        (Port => Port,
+                        Rate => GNAT.Serial_Communications.B115200);
                   exception
                      when GNAT.Serial_Communications.Serial_Error =>
                               Put_Line ("Serial Error - Board not connected");

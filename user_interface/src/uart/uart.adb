@@ -31,10 +31,6 @@ package body Uart is
          Line (I) := '0';
       end loop;
 
-      GNAT.Serial_Communications.Set
-        (Port => Port,
-         Rate => GNAT.Serial_Communications.B115200);
-
       --  Make sure to only start collecting data at start of new line
       loop
          GNAT.Serial_Communications.Read (Port, Buffer, Offset);
