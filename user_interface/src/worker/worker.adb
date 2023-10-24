@@ -3,8 +3,12 @@ with Ada.Exceptions;    use Ada.Exceptions;
 with Gtk.Main.Router;   use Gtk.Main.Router;
 with Ada.Text_IO;       use Ada.Text_IO;
 with Glib;              use Glib;
-with Uart;
+
 with GNAT.Serial_Communications;
+with Globals;
+with Uart;
+
+use type Globals.Board_State;
 
 package body Worker is
 
@@ -78,10 +82,13 @@ package body Worker is
                raise Quit_Error;
             else
                Last_Time := Clock;
-               -- check if state is connected
-               Feed_UART_Data (Scope, Channel1);
-               Feed_UART_Data (Scope, Channel2);
-               Feed_UART_Data (Scope, Channel3);
+
+               if Globals.Board_State_Change.Get_Board_State = Globals.Connected then -- check if state is connected
+                  Put_Line("bep");
+                  Feed_UART_Data (Scope, Channel1);
+                  Feed_UART_Data (Scope, Channel2);
+                  Feed_UART_Data (Scope, Channel3);
+               end if;
             end select;
          end if;
 

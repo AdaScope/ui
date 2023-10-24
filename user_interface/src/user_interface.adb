@@ -23,6 +23,7 @@ with Worker;
 use type Globals.Board_State;
 
 procedure User_Interface is
+   Port           : GNAT.Serial_Communications.Serial_Port; --  The port to connect to
    Window         : Gtk_Window;
    Oscilloscope   : Gtk_Oscilloscope;
    Writer_Ch_1    : Worker.Process;
@@ -31,6 +32,53 @@ procedure User_Interface is
    Channel_1      : Channel_Number;
    Channel_2      : Channel_Number;
    Channel_3      : Channel_Number;
+   Port_Location  : constant GNAT.Serial_Communications.Port_Name := "/dev/ttyACM0";
+   Last_Time      : Time := Clock;
+   is_connected   : Boolean;
+
+--
+--  Connect_Oscilloscope
+--
+   task Connect_Oscilloscope is
+      entry Stop;
+   end Connect_Oscilloscope;
+
+   task body Connect_Oscilloscope is
+   begin
+      loop
+         --  Checking connection every second
+         if Clock - Last_Time > 1.0 then
+            select 
+               accept Stop;
+               Put_Line("Stopping connection attempts.");
+               exit;
+            else
+               if Globals.Board_State_Change.Get_Board_State = Globals.Disconnected then
+                  is_connected := True;
+                  declare
+                  begin
+                     GNAT.Serial_Communications.Open
+                     (Port => Port,
+                        Name => Port_Location);
+                  exception
+                     when GNAT.Serial_Communications.Serial_Error =>
+                              Put_Line ("Serial Error - Board not connected");
+                              is_connected := False;
+                  end;
+                  if is_connected then
+                     Put_Line ("Changing board state to Connected");
+                     Globals.Board_State_Change.Change_State_Connected;
+                  end if;
+               else
+                  Put_Line ("Board connected.");
+                  exit when Globals.Board_State_Change.Get_Board_State = Globals.Connected;
+               end if;
+            end select;
+            Last_Time := Clock;
+         end if;
+      end loop;
+      Put_Line ("Loop exited.");
+   end Connect_Oscilloscope;
 --
 --  Delete_Event -- Window closing notification event
 --
@@ -83,50 +131,6 @@ procedure User_Interface is
          Say (Exception_Information (Error));
    end Start_Oscilloscope;
 
---
---  Connect_Oscilloscope
---
-   procedure Connect_Oscilloscope is
-      Port           : GNAT.Serial_Communications.Serial_Port; --  The port to connect to
-      Port_Location  : constant GNAT.Serial_Communications.Port_Name := "/dev/ttyACM0";
-      Last_Time      : Time := Clock;
-      is_connected   : Boolean;
-   begin
-
-      loop
-         --  Checking connection every second
-         if Clock - Last_Time > 1.0 then
-            if Globals.Board_State_Change.Get_Board_State = Globals.Disconnected then
-               is_connected := True;
-               declare
-               begin
-                  GNAT.Serial_Communications.Open
-                  (Port => Port,
-                     Name => Port_Location);
-               exception
-                  when GNAT.Serial_Communications.Serial_Error =>
-                           Put_Line ("Serial Error - Board not connected");
-                           is_connected := False;
-               end;
-               if is_connected then
-                  Put_Line ("Changing board state to Connected");
-                  Globals.Board_State_Change.Change_State_Connected;
-               end if;
-            else
-               Put_Line ("Board connected.");
-               return;
-            end if;
-            Last_Time := Clock;
-         end if;
-      end loop;
-
-   --  exception
-   --     when Error : Data_Error =>
-   --        Say (Exception_Message (Error));
-   --     when Error : others =>
-   --        Say (Exception_Information (Error));
-   end Connect_Oscilloscope;
-
    type Local_Delete_Callback is access function  return Boolean;
    function "+" is
       new Ada.Unchecked_Conversion
@@ -148,7 +152,7 @@ begin
       Channels  : Gtk_Oscilloscope_Channels_Panel; --  Channel checkboxes
    begin
 
-      Connect_Oscilloscope;
+      --  Connect_Oscilloscope;
 
       --
       --  Setting up the main window pane
@@ -173,7 +177,7 @@ begin
       Oscilloscope.Set_Time_Grid    (Lower, True);
       Oscilloscope.Set_Time_Axis    (Lower, True, False);
       Oscilloscope.Set_Grid_Colors  (
-         RGB (0.75, 0.75, 0.75), 
+         RGB (0.75, 0.75, 0.75),
          RGB (0.9, 0.9, 0.9));
 
       declare
@@ -239,6 +243,8 @@ begin
    Show_All (Window);
    Gtk.Main.Main;
    Put_Line ("Window closed");
+   Connect_Oscilloscope.Stop;
+   GNAT.Serial_Communications.Close (Port);
 exception
    when Error : others =>
       Put_Line ("Error: " & Exception_Information (Error));

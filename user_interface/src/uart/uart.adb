@@ -78,7 +78,6 @@ package body Uart is
                Line_Index := Line_Index - 1;
          end;
       end loop;
-      GNAT.Serial_Communications.Close (Port);
       return Readings;
    end Read;
 end Uart;
