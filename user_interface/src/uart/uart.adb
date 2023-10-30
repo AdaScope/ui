@@ -2,6 +2,7 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Float_Text_IO;
 with Ada.IO_Exceptions;
 with Ada.Streams;
+with Globals;
 
 package body Uart is
 
@@ -10,7 +11,6 @@ package body Uart is
       ) return Readings_Array is
 
          --  Initialize the variables for the read
-         Port : GNAT.Serial_Communications.Serial_Port;
          Buffer : Ada.Streams.Stream_Element_Array (1 .. 1);
          Offset : Ada.Streams.Stream_Element_Offset := 1;
 
@@ -33,7 +33,7 @@ package body Uart is
 
       --  Make sure to only start collecting data at start of new line
       loop
-         GNAT.Serial_Communications.Read (Port, Buffer, Offset);
+         GNAT.Serial_Communications.Read (Globals.Port, Buffer, Offset);
          exit when Character'Val (Buffer (1)) = ASCII.LF;
       end loop;
 
@@ -41,7 +41,7 @@ package body Uart is
       while Counter < Number_Of_Samples + 1 loop
          begin
 
-            GNAT.Serial_Communications.Read (Port, Buffer, Offset);
+            GNAT.Serial_Communications.Read (Globals.Port, Buffer, Offset);
 
             --  Store the reading in the Char variable
             Char := Character'Val (Buffer (1));

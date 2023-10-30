@@ -22,10 +22,9 @@ package body Worker is
 
    --  Feeding data to oscilloscope
    procedure Feed_UART_Data (
-      Scope : Gtk_Oscilloscope;
+      Scope     : Gtk_Oscilloscope;
       Channel   : Channel_Number) is
    begin
-
       --  Get data from UART
       Readings := Uart.Read
         (Number_Of_Samples => Number_Of_Samples);
@@ -45,22 +44,22 @@ package body Worker is
 
    --  Managing pause/play
    task body Process is
-      Scope     : Gtk_Oscilloscope;
+      Scope      : Gtk_Oscilloscope;
       Channel1   : Channel_Number;
       Channel2   : Channel_Number;
       Channel3   : Channel_Number;
-      Last_Time : Time := Clock;
+      Last_Time  : Time := Clock;
 
    begin
       select -- Waiting for parameters or exit request
          accept Start
-                (Scope     : Gtk_Oscilloscope;
+                ( Scope     : Gtk_Oscilloscope;
                   Channel1  : Channel_Number;
                   Channel2  : Channel_Number;
                   Channel3  : Channel_Number
                 )
          do
-            Process.Scope    := Scope;
+            Process.Scope     := Scope;
             Process.Channel1  := Channel1;
             Process.Channel2  := Channel2;
             Process.Channel3  := Channel3;
@@ -71,6 +70,7 @@ package body Worker is
          raise Quit_Error;
       end select;
 
+      Put_Line ("Starting computations");
       --  Starting computations
       --  Looping
       while True loop
@@ -84,7 +84,6 @@ package body Worker is
                Last_Time := Clock;
 
                if Globals.Board_State_Change.Get_Board_State = Globals.Connected then -- check if state is connected
-                  Put_Line("bep");
                   Feed_UART_Data (Scope, Channel1);
                   Feed_UART_Data (Scope, Channel2);
                   Feed_UART_Data (Scope, Channel3);
@@ -103,7 +102,6 @@ package body Worker is
       
       when GNAT.Serial_Communications.Serial_Error =>
          Put_Line ("Serial Error");
-         Say ("No board was detected. Make sure you connect a board to the host computer before hitting the start button.");
          null;
 
       when Error : others =>

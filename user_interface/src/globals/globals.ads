@@ -1,4 +1,8 @@
+with GNAT.Serial_Communications;
+
 package Globals is
+
+   Port : GNAT.Serial_Communications.Serial_Port; --  The port to connect to
 
    type Board_State is (Disconnected, Connected);
 

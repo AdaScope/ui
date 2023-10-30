@@ -1,4 +1,5 @@
 with Gtk.Oscilloscope;      use Gtk.Oscilloscope;
+with Gtk.Main.Router;       use Gtk.Main.Router;
 with Ada.Exceptions;        use Ada.Exceptions;
 with Ada.Calendar;          use Ada.Calendar;
 with Ada.Text_IO;           use Ada.Text_IO;
@@ -23,65 +24,62 @@ with Worker;
 use type Globals.Board_State;
 
 procedure User_Interface is
-   Port           : GNAT.Serial_Communications.Serial_Port; --  The port to connect to
-   Window         : Gtk_Window;
-   Oscilloscope   : Gtk_Oscilloscope;
-   Writer_Ch_1    : Worker.Process;
-   Writer_Ch_2    : Worker.Process;
-   Writer_Ch_3    : Worker.Process;
-   Channel_1      : Channel_Number;
-   Channel_2      : Channel_Number;
-   Channel_3      : Channel_Number;
-   Port_Location  : constant GNAT.Serial_Communications.Port_Name := "/dev/ttyACM0";
-   Last_Time      : Time := Clock;
-   is_connected   : Boolean;
+   Window            : Gtk_Window;
+   Oscilloscope      : Gtk_Oscilloscope;
+   Writer_Ch_1       : Worker.Process;
+   Writer_Ch_2       : Worker.Process;
+   Writer_Ch_3       : Worker.Process;
+   Channel_1         : Channel_Number;
+   Channel_2         : Channel_Number;
+   Channel_3         : Channel_Number;
+   Last_Time         : Time := Clock;
+   is_connected      : Boolean;
+   has_been_notified : Boolean;
+   Port_Location     : constant GNAT.Serial_Communications.Port_Name := "/dev/ttyACM0";
+   exiting_window    : Boolean := False;
 
 --
 --  Connect_Oscilloscope
 --
-   task Connect_Oscilloscope is
-      entry Stop;
-   end Connect_Oscilloscope;
+   task Connect_Oscilloscope;
 
    task body Connect_Oscilloscope is
    begin
-      loop
+      has_been_notified := False;
+      while exiting_window = False loop
          --  Checking connection every second
          if Clock - Last_Time > 1.0 then
-            select 
-               accept Stop;
-               Put_Line("Stopping connection attempts.");
-               exit;
-            else
-               if Globals.Board_State_Change.Get_Board_State = Globals.Disconnected then
-                  is_connected := True;
-                  declare
-                  begin
-                     GNAT.Serial_Communications.Open
-                     (Port => Port,
-                        Name => Port_Location);
+            if Globals.Board_State_Change.Get_Board_State = Globals.Disconnected then
+               is_connected := True;
+               declare
+               begin
+                  GNAT.Serial_Communications.Open
+                  (Port => Globals.Port,
+                     Name => Port_Location);
 
-                     GNAT.Serial_Communications.Set
-                        (Port => Port,
-                        Rate => GNAT.Serial_Communications.B115200);
-                  exception
-                     when GNAT.Serial_Communications.Serial_Error =>
-                              Put_Line ("Serial Error - Board not connected");
-                              is_connected := False;
-                  end;
-                  if is_connected then
-                     Put_Line ("Changing board state to Connected");
-                     Globals.Board_State_Change.Change_State_Connected;
-                  end if;
-               else
-                  Put_Line ("Board connected.");
-                  exit when Globals.Board_State_Change.Get_Board_State = Globals.Connected;
+                  GNAT.Serial_Communications.Set
+                     (Port => Globals.Port,
+                     Rate => GNAT.Serial_Communications.B115200);
+               exception
+                  when GNAT.Serial_Communications.Serial_Error =>
+                     Put_Line ("Serial Error - Board not connected");
+                     is_connected := False;
+                     if has_been_notified = False then
+                        Say ("No board was detected. Make sure you connect a board to the host computer before hitting the start button.");
+                        has_been_notified := True;
+                     end if;
+               end;
+               if is_connected then
+                  Put_Line ("Changing board state to Connected");
+                  Globals.Board_State_Change.Change_State_Connected;
                end if;
-            end select;
+            else
+               Put_Line ("Board connected.");
+               exit when Globals.Board_State_Change.Get_Board_State = Globals.Connected;
+            end if;
             Last_Time := Clock;
          end if;
       end loop;
-      Put_Line ("Loop exited.");
    end Connect_Oscilloscope;
 --
 --  Delete_Event -- Window closing notification event
@@ -242,13 +240,12 @@ begin
    begin
       Start_Oscilloscope;
    end;
-   Put_Line ("Channels connected");
    Window.Set_Default_Size (1200, 600);
    Show_All (Window);
    Gtk.Main.Main;
    Put_Line ("Window closed");
-   Connect_Oscilloscope.Stop;
-   GNAT.Serial_Communications.Close (Port);
+   exiting_window := True;
+   GNAT.Serial_Communications.Close (Globals.Port);
 exception
    when Error : others =>
       Put_Line ("Error: " & Exception_Information (Error));
