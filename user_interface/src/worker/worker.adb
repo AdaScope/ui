@@ -53,10 +53,10 @@ package body Worker is
    begin
       select -- Waiting for parameters or exit request
          accept Start (
-            Scope      : Gtk_Oscilloscope;
-            Channel1  : Channel_Number;
-            Channel2  : Channel_Number;
-            Channel3  : Channel_Number
+            Scope       : Gtk_Oscilloscope;
+            Channel1    : Channel_Number;
+            Channel2    : Channel_Number;
+            Channel3    : Channel_Number
          )
          do
             Process.Scope     := Scope;
