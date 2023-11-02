@@ -1,5 +1,7 @@
 with Gtk.Oscilloscope;      use Gtk.Oscilloscope;
+with Gtk.Main.Router;       use Gtk.Main.Router;
 with Ada.Exceptions;        use Ada.Exceptions;
+with Ada.Calendar;          use Ada.Calendar;
 with Ada.Text_IO;           use Ada.Text_IO;
 with Gtk.Missed;            use Gtk.Missed;
 with Gtk.Widget;            use Gtk.Widget;
@@ -12,20 +14,82 @@ with Gtk.Box;               use Gtk.Box;
 with Glib;                  use Glib;
 
 with Gtk.Oscilloscope.Channels_Panel; use Gtk.Oscilloscope.Channels_Panel;
+with GNAT.Serial_Communications;
 with Ada.Unchecked_Conversion;
 with Gtk.Layered;
-with Gtk.Main.Router;
+with Globals;
 with Worker;
 
+use type Globals.Board_State;
+
 procedure User_Interface is
-   Window         : Gtk_Window;
-   Oscilloscope   : Gtk_Oscilloscope;
-   Writer_Ch_1    : Worker.Process;
-   Writer_Ch_2    : Worker.Process;
-   Writer_Ch_3    : Worker.Process;
-   Channel_1      : Channel_Number;
-   Channel_2      : Channel_Number;
-   Channel_3      : Channel_Number;
+   Window            : Gtk_Window;
+   Oscilloscope      : Gtk_Oscilloscope;
+   Writer_Ch_1       : Worker.Process;
+   Writer_Ch_2       : Worker.Process;
+   Writer_Ch_3       : Worker.Process;
+   Channel_1         : Channel_Number;
+   Channel_2         : Channel_Number;
+   Channel_3         : Channel_Number;
+   Last_Time         : Time := Clock;
+   Is_connected      : Boolean;
+   Has_Been_Notified : Boolean;
+   Exiting_Window    : Boolean := False;
+   Port_Location     : constant
+                          GNAT.Serial_Communications.Port_Name :=
+                          "/dev/ttyACM0";
+
+--
+--  Connect_Oscilloscope
+--
+   task Connect_Oscilloscope;
+
+   task body Connect_Oscilloscope is
+   begin
+      Has_Been_Notified := False;
+      while Exiting_Window = False loop
+         --  Checking connection every second
+         if Clock - Last_Time > 1.0 then
+            if Globals.Board_State_Change.Get_Board_State =
+               Globals.Disconnected
+            then
+               Is_connected := True;
+               declare
+               begin
+                  GNAT.Serial_Communications.Open
+                  (Port => Globals.Port,
+                     Name => Port_Location);
+
+                  GNAT.Serial_Communications.Set
+                     (Port => Globals.Port,
+                     Rate => GNAT.Serial_Communications.B115200);
+               exception
+                  when GNAT.Serial_Communications.Serial_Error =>
+                     Put_Line ("Serial Error - Board not connected");
+                     Is_connected := False;
+                     if Has_Been_Notified = False then
+                        Say ("No board was detected. " &
+                           "Make sure you connect a board to " &
+                           "the host computer before hitting " &
+                           "the start button."
+                        );
+                        Has_Been_Notified := True;
+                     end if;
+               end;
+               if Is_connected then
+                  Put_Line ("Changing board state to Connected");
+                  Globals.Board_State_Change.Change_State_Connected;
+               end if;
+            else
+               Put_Line ("Board connected.");
+               exit when
+                   Globals.Board_State_Change.Get_Board_State =
+                      Globals.Connected;
+            end if;
+            Last_Time := Clock;
+         end if;
+      end loop;
+   end Connect_Oscilloscope;
 --
 --  Delete_Event -- Window closing notification event
 --
@@ -71,18 +135,6 @@ procedure User_Interface is
          Channel_2,
          Channel_3
       );
-      --  Initiate writing process channel 2
-      --  Writer_Ch_2.Start
-      --  (
-      --     Oscilloscope,
-      --     Channel_2
-      --  );
-      --  Initiate writing process channel 3
-      --  Writer_Ch_3.Start
-      --  (
-      --     Oscilloscope,
-      --     Channel_3
-      --  );
    exception
       when Error : Data_Error =>
          Say (Exception_Message (Error));
@@ -98,9 +150,6 @@ procedure User_Interface is
          );
 begin
    Gtk.Main.Init;
-   --  Gtk.Main.Router.GNAT_Stack.Set_Log_Trace ("Gtk");
-   --  Gtk.Main.Router.GNAT_Stack.Set_Log_Trace ("GLib-GObject");
-   --  Gtk.Main.Router.GNAT_Stack.Set_Log_Trace ("GtkAda+");
    Gtk.Window.Gtk_New (Window);
    Gtk.Main.Router.Init (Window);
    Window.Set_Title ("AdaScope");
@@ -112,8 +161,10 @@ begin
       Panels    : Gtk_Table;                       --  Right half, channels
       Frame     : Gtk_Frame;                       --  Left half, oscilloscope
       Channels  : Gtk_Oscilloscope_Channels_Panel; --  Channel checkboxes
-
    begin
+
+      --  Connect_Oscilloscope;
+
       --
       --  Setting up the main window pane
       --
@@ -137,9 +188,8 @@ begin
       Oscilloscope.Set_Time_Grid    (Lower, True);
       Oscilloscope.Set_Time_Axis    (Lower, True, False);
       Oscilloscope.Set_Grid_Colors  (
-         RGB (0.75, 0.75, 0.75), 
+         RGB (0.75, 0.75, 0.75),
          RGB (0.9, 0.9, 0.9));
-
 
       declare
       begin
@@ -176,8 +226,6 @@ begin
       Oscilloscope.Set_Values_Grid  (Left, True);
       Oscilloscope.Set_Values_Axis_Width (Left, 80);
 
-
-
       Gtk_New (Frame);
       Pane.Pack_Start (Frame);
       Frame.Set_Border_Width (3);
@@ -199,11 +247,12 @@ begin
    begin
       Start_Oscilloscope;
    end;
-   Put_Line ("Channels connected");
    Window.Set_Default_Size (1200, 600);
    Show_All (Window);
    Gtk.Main.Main;
    Put_Line ("Window closed");
+   Exiting_Window := True;
+   GNAT.Serial_Communications.Close (Globals.Port);
 exception
    when Error : others =>
       Put_Line ("Error: " & Exception_Information (Error));

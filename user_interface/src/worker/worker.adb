@@ -3,10 +3,12 @@ with Ada.Exceptions;    use Ada.Exceptions;
 with Gtk.Main.Router;   use Gtk.Main.Router;
 with Ada.Text_IO;       use Ada.Text_IO;
 with Glib;              use Glib;
-with Uart;
-with GNAT.Serial_Communications;
 
---  with Data_structures;
+with GNAT.Serial_Communications;
+with Globals;
+with Uart;
+
+use type Globals.Board_State;
 
 package body Worker is
 
@@ -20,14 +22,12 @@ package body Worker is
 
    --  Feeding data to oscilloscope
    procedure Feed_UART_Data (
-      Scope : Gtk_Oscilloscope;
+      Scope     : Gtk_Oscilloscope;
       Channel   : Channel_Number) is
    begin
-
       --  Get data from UART
       Readings := Uart.Read
-        (Number_Of_Samples => Number_Of_Samples,
-         Port_Location => "/dev/ttyACM0");
+        (Number_Of_Samples => Number_Of_Samples);
 
       --  Feed data to the graph
       for N in 1 .. Number_Of_Samples loop
@@ -44,22 +44,22 @@ package body Worker is
 
    --  Managing pause/play
    task body Process is
-      Scope     : Gtk_Oscilloscope;
+      Scope      : Gtk_Oscilloscope;
       Channel1   : Channel_Number;
       Channel2   : Channel_Number;
       Channel3   : Channel_Number;
-      Last_Time : Time := Clock;
+      Last_Time  : Time := Clock;
 
    begin
       select -- Waiting for parameters or exit request
-         accept Start
-                (Scope     : Gtk_Oscilloscope;
-                  Channel1  : Channel_Number;
-                  Channel2  : Channel_Number;
-                  Channel3  : Channel_Number
-                )
+         accept Start (
+            Scope       : Gtk_Oscilloscope;
+            Channel1    : Channel_Number;
+            Channel2    : Channel_Number;
+            Channel3    : Channel_Number
+         )
          do
-            Process.Scope    := Scope;
+            Process.Scope     := Scope;
             Process.Channel1  := Channel1;
             Process.Channel2  := Channel2;
             Process.Channel3  := Channel3;
@@ -70,6 +70,7 @@ package body Worker is
          raise Quit_Error;
       end select;
 
+      Put_Line ("Starting computations");
       --  Starting computations
       --  Looping
       while True loop
@@ -81,9 +82,15 @@ package body Worker is
                raise Quit_Error;
             else
                Last_Time := Clock;
-               Feed_UART_Data (Scope, Channel1);
-               Feed_UART_Data (Scope, Channel2);
-               Feed_UART_Data (Scope, Channel3);
+
+               --  check if state is connected
+               if Globals.Board_State_Change.Get_Board_State =
+                  Globals.Connected
+               then
+                  Feed_UART_Data (Scope, Channel1);
+                  Feed_UART_Data (Scope, Channel2);
+                  Feed_UART_Data (Scope, Channel3);
+               end if;
             end select;
          end if;
 
@@ -95,10 +102,9 @@ package body Worker is
       when Quit_Error | Busy_Error => --  Main loop quitted, we follow
          Put_Line ("Quitting process");
          null;
-      
+
       when GNAT.Serial_Communications.Serial_Error =>
          Put_Line ("Serial Error");
-         Say ("No board was detected. Make sure you connect a board to the host computer before hitting the start button.");
          null;
 
       when Error : others =>
