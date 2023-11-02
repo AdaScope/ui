@@ -7,8 +7,9 @@ package Globals is
    type Board_State is (Disconnected, Connected);
 
    for Board_State use (
-      Disconnected   => 0, 
-      Connected      => 1);
+      Disconnected   => 0,
+      Connected      => 1
+   );
 
    protected Board_State_Change is
 

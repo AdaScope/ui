@@ -28,5 +28,4 @@ package body Globals is
 
    end Board_State_Change;
 
-
 end Globals;

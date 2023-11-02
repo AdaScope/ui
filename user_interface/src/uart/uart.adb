@@ -1,4 +1,5 @@
 with Ada.Text_IO; use Ada.Text_IO;
+with GNAT.Serial_Communications;
 with Ada.Float_Text_IO;
 with Ada.IO_Exceptions;
 with Ada.Streams;

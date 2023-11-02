@@ -52,12 +52,12 @@ package body Worker is
 
    begin
       select -- Waiting for parameters or exit request
-         accept Start
-                ( Scope     : Gtk_Oscilloscope;
-                  Channel1  : Channel_Number;
-                  Channel2  : Channel_Number;
-                  Channel3  : Channel_Number
-                )
+         accept Start (
+            Scope      : Gtk_Oscilloscope;
+            Channel1  : Channel_Number;
+            Channel2  : Channel_Number;
+            Channel3  : Channel_Number
+         )
          do
             Process.Scope     := Scope;
             Process.Channel1  := Channel1;
@@ -83,7 +83,10 @@ package body Worker is
             else
                Last_Time := Clock;
 
-               if Globals.Board_State_Change.Get_Board_State = Globals.Connected then -- check if state is connected
+               --  check if state is connected
+               if Globals.Board_State_Change.Get_Board_State =
+                  Globals.Connected
+               then
                   Feed_UART_Data (Scope, Channel1);
                   Feed_UART_Data (Scope, Channel2);
                   Feed_UART_Data (Scope, Channel3);
@@ -99,7 +102,7 @@ package body Worker is
       when Quit_Error | Busy_Error => --  Main loop quitted, we follow
          Put_Line ("Quitting process");
          null;
-      
+
       when GNAT.Serial_Communications.Serial_Error =>
          Put_Line ("Serial Error");
          null;

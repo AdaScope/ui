@@ -16,7 +16,6 @@ with Glib;                  use Glib;
 with Gtk.Oscilloscope.Channels_Panel; use Gtk.Oscilloscope.Channels_Panel;
 with GNAT.Serial_Communications;
 with Ada.Unchecked_Conversion;
-with Gtk.Main.Router;
 with Gtk.Layered;
 with Globals;
 with Worker;
@@ -35,8 +34,10 @@ procedure User_Interface is
    Last_Time         : Time := Clock;
    is_connected      : Boolean;
    has_been_notified : Boolean;
-   Port_Location     : constant GNAT.Serial_Communications.Port_Name := "/dev/ttyACM0";
    exiting_window    : Boolean := False;
+   Port_Location     : constant
+                          GNAT.Serial_Communications.Port_Name :=
+                          "/dev/ttyACM0";
 
 --
 --  Connect_Oscilloscope
@@ -49,7 +50,9 @@ procedure User_Interface is
       while exiting_window = False loop
          --  Checking connection every second
          if Clock - Last_Time > 1.0 then
-            if Globals.Board_State_Change.Get_Board_State = Globals.Disconnected then
+            if Globals.Board_State_Change.Get_Board_State =
+               Globals.Disconnected
+            then
                is_connected := True;
                declare
                begin
@@ -65,7 +68,11 @@ procedure User_Interface is
                      Put_Line ("Serial Error - Board not connected");
                      is_connected := False;
                      if has_been_notified = False then
-                        Say ("No board was detected. Make sure you connect a board to the host computer before hitting the start button.");
+                        Say ("No board was detected. " &
+                           "Make sure you connect a board to " &
+                           "the host computer before hitting " &
+                           "the start button."
+                        );
                         has_been_notified := True;
                      end if;
                end;
@@ -75,7 +82,9 @@ procedure User_Interface is
                end if;
             else
                Put_Line ("Board connected.");
-               exit when Globals.Board_State_Change.Get_Board_State = Globals.Connected;
+               exit when
+                   Globals.Board_State_Change.Get_Board_State =
+                      Globals.Connected;
             end if;
             Last_Time := Clock;
          end if;
@@ -216,8 +225,6 @@ begin
       Oscilloscope.Set_Values_Scale (Left, True);
       Oscilloscope.Set_Values_Grid  (Left, True);
       Oscilloscope.Set_Values_Axis_Width (Left, 80);
-
-
 
       Gtk_New (Frame);
       Pane.Pack_Start (Frame);

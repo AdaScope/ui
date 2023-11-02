@@ -1,5 +1,3 @@
-with GNAT.Serial_Communications;
-
 package Uart is
 
    --  Type for the values returned by Read function
