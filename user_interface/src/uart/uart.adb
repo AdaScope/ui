@@ -7,24 +7,79 @@ with Globals;
 
 package body Uart is
 
+   type Received_Bytes is array (Integer range <>) of Min_Ada.Bytes;
+
+   function Get_Data (
+      Number_Of_Samples : Integer
+   ) return Boolean is
+      Data : Received_Bytes;
+   begin
+      for I in 1 .. Number_Of_Samples loop
+         Data (I) := Min_Ada.Rx_Bytes;
+         I        := I + 1;
+      end loop;
+      return True;
+   end Get_Data;
+
+   procedure Process_Data (
+      Data              : Min_Ada.Data_Array;
+      Trigger_Level     : Float;
+      Number_Of_Samples : Integer
+   ) is
+      Triggered     : Boolean  := False;
+      Capture_Start : Positive := 1;
+      Capture_End   : Positive := 1;
+   begin
+      for I in Data'Range loop
+         if Float'Val (I) > Trigg and not Triggered then
+            null;
+            --  Trigger condition met
+            Triggered := True;
+
+            --  Find trigger point and collect data before and after
+            Capture_Start := Integer'Max (1, I - (Number_Of_Samples / 2));
+            Capture_End   := Integer'Max (1, I - (Number_Of_Samples / 2));
+            --  TODO Exit the loop
+         end if;
+      end loop;
+
+      if Triggered then
+         Get_Triggered_Data (Data, Capture_Start, Capture_End);
+      else
+         Get_Triggered_Data (Data, 1, Number_Of_Samples);
+      end if;
+   end Process_Data;
+
+   function Get_Triggered_Data (
+      Data          : Integer;
+      Capture_Start : Positive;
+      Capture_End   : Positive
+   ) return Integer is
+      New_Data      : Integer;
+   begin
+      New_Data := Data (Capture_Start .. Capture_End);
+      return New_Data;
+   end Get_Triggered_Data;
+
    function Read (
       Number_Of_Samples : Integer
-      ) return Readings_Array is
+   ) return Readings_Array is
 
-         --  Initialize the variables for the read
-         Buffer : Ada.Streams.Stream_Element_Array (1 .. 1);
-         Offset : Ada.Streams.Stream_Element_Offset := 1;
+      --  Initialize the variables for the read
+      Buffer : Ada.Streams.Stream_Element_Array (1 .. 1);
+      Offset : Ada.Streams.Stream_Element_Offset := 1;
 
-         --  For storing one reading
-         Line : String (1 .. 16);
-         Line_Index : Natural := Line'First;
-         Char : Character;
+      --  For storing one reading
+      Line       : String (1 .. 16);
+      Line_Index : Natural := Line'First;
+      Char       : Character;
 
-         --  To count the number of character readings done
-         Counter : Integer := 1;
+      --  To count the number of character readings done
+      Counter    : Integer := 1;
 
-         --  For storing all the readings
-         Readings : Uart.Readings_Array (1 .. Number_Of_Samples);
+      --  For storing all the readings
+      Readings   : Uart.Readings_Array (1 .. Number_Of_Samples);
+
    begin
 
       --  We initialize the string to eliminate warnings
