@@ -7,59 +7,85 @@ with Globals;
 
 package body Uart is
 
-   type Received_Bytes is array (Integer range <>) of Min_Ada.Bytes;
-
    function Get_Data (
       Number_Of_Samples : Integer
-   ) return Boolean is
-      Data : Received_Bytes;
+   ) return Readings_Array is
+      Readings : Readings_Array (1 .. Number_Of_Samples);
    begin
-      for I in 1 .. Number_Of_Samples loop
-         Data (I) := Min_Ada.Rx_Bytes;
-         I        := I + 1;
-      end loop;
-      return True;
+      Readings := Read (Number_Of_Samples => Number_Of_Samples);
+      return Readings;
    end Get_Data;
 
-   procedure Process_Data (
-      Data              : Min_Ada.Data_Array;
-      Trigger_Level     : Float;
-      Number_Of_Samples : Integer
-   ) is
-      Triggered     : Boolean  := False;
-      Capture_Start : Positive := 1;
-      Capture_End   : Positive := 1;
-   begin
-      for I in Data'Range loop
-         if Float'Val (I) > Trigg and not Triggered then
-            null;
-            --  Trigger condition met
-            Triggered := True;
-
-            --  Find trigger point and collect data before and after
-            Capture_Start := Integer'Max (1, I - (Number_Of_Samples / 2));
-            Capture_End   := Integer'Max (1, I - (Number_Of_Samples / 2));
-            --  TODO Exit the loop
-         end if;
-      end loop;
-
-      if Triggered then
-         Get_Triggered_Data (Data, Capture_Start, Capture_End);
-      else
-         Get_Triggered_Data (Data, 1, Number_Of_Samples);
-      end if;
-   end Process_Data;
-
    function Get_Triggered_Data (
-      Data          : Integer;
-      Capture_Start : Positive;
-      Capture_End   : Positive
-   ) return Integer is
-      New_Data      : Integer;
+      Data          : Readings_Array;
+      Capture_Start : Integer;
+      Capture_End   : Integer
+   ) return Readings_Array is
+      New_Data      : Readings_Array (Capture_Start .. Capture_End);
    begin
       New_Data := Data (Capture_Start .. Capture_End);
       return New_Data;
    end Get_Triggered_Data;
+
+   function Get_Processed_Data (
+      Trigger_Level     : Float;
+      Number_Of_Samples : Integer
+   ) return Readings_Array is
+      Triggered      : Boolean        := False;
+      Capture_Start  : Integer        := 1;
+      Capture_End    : Integer        := Number_Of_Samples / 2;
+      Data           : Readings_Array (1 .. Number_Of_Samples);
+   begin
+      Data := Get_Data (Number_Of_Samples);
+      for I in Data'Range loop
+         --  Check if can be triggered
+         if Data (I) > Trigger_Level - 100.0 and then
+            Data (I) < Trigger_Level + 100.0 and then
+            not Triggered
+         then
+            --  Check for correct slope
+            if I + 3 <= Number_Of_Samples then
+               if Data (I) < Data (I + 3) then
+                  Triggered := True;
+               end if;
+            elsif I - 3 >= 1 then
+               if Data (I - 3) < Data (I) then
+                  Triggered := True;
+               end if;
+            end if;
+
+            if Triggered then
+               --  Find trigger point and collect data before and after
+               Capture_Start :=
+                  Integer'Max (1, I - (Number_Of_Samples / 4));
+               Capture_End   :=
+                  Integer'Min (Data'Last, I + (Number_Of_Samples / 4));
+               if Capture_End - Capture_Start /= Number_Of_Samples / 2 then
+                  Triggered := False;
+               end if;
+            end if;
+         end if;
+      end loop;
+
+      declare
+         Triggered_Data : Readings_Array (Capture_Start .. Capture_End - 1);
+      begin
+         if Triggered then
+            Triggered_Data := Get_Triggered_Data (
+               Data => Data,
+               Capture_Start => Capture_Start,
+               Capture_End => Capture_End - 1
+            );
+         else
+            Triggered_Data := Get_Triggered_Data (
+               Data => Data,
+               Capture_Start => Capture_Start,
+               Capture_End => Capture_End - 1
+            );
+         end if;
+         return Triggered_Data;
+      end;
+   end Get_Processed_Data;
 
    function Read (
       Number_Of_Samples : Integer
