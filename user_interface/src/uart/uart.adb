@@ -28,15 +28,25 @@ package body Uart is
    end Get_Triggered_Data;
 
    function Get_Processed_Data (
-      Trigger_Level     : Float;
       Number_Of_Samples : Integer
    ) return Readings_Array is
-      Triggered      : Boolean        := False;
-      Capture_Start  : Integer        := 1;
-      Capture_End    : Integer        := Number_Of_Samples / 2;
-      Data           : Readings_Array (1 .. Number_Of_Samples);
+      Triggered     : Boolean        := False;
+      Capture_Start : Integer        := 1;
+      Capture_End   : Integer        := Number_Of_Samples / 2;
+      Data          : Readings_Array (1 .. Number_Of_Samples);
+      Data_Min      : Float          := 5000.0;  --  Oscilloscope max is 3000
+      Data_Max      : Float          := 0.0;
+      Trigger_Level : Float;
    begin
       Data := Get_Data (Number_Of_Samples);
+
+      for I in Data'Range loop
+         Data_Min := Float'Min (Data_Min, Data (I));
+         Data_Max := Float'Max (Data_Max, Data (I));
+      end loop;
+
+      Trigger_Level := (Data_Min + Data_Max) / 2.0;
+
       for I in Data'Range loop
          --  Check if can be triggered
          if Data (I) > Trigger_Level - 100.0 and then
@@ -60,29 +70,27 @@ package body Uart is
                   Integer'Max (1, I - (Number_Of_Samples / 4));
                Capture_End   :=
                   Integer'Min (Data'Last, I + (Number_Of_Samples / 4));
+
                if Capture_End - Capture_Start /= Number_Of_Samples / 2 then
+                  Capture_Start := 1;
+                  Capture_End   := Number_Of_Samples / 2;
                   Triggered := False;
                end if;
             end if;
+
+            exit when Triggered;
+
          end if;
       end loop;
 
       declare
          Triggered_Data : Readings_Array (Capture_Start .. Capture_End - 1);
       begin
-         if Triggered then
-            Triggered_Data := Get_Triggered_Data (
-               Data => Data,
-               Capture_Start => Capture_Start,
-               Capture_End => Capture_End - 1
-            );
-         else
-            Triggered_Data := Get_Triggered_Data (
-               Data => Data,
-               Capture_Start => Capture_Start,
-               Capture_End => Capture_End - 1
-            );
-         end if;
+         Triggered_Data := Get_Triggered_Data (
+            Data => Data,
+            Capture_Start => Capture_Start,
+            Capture_End => Capture_End - 1
+         );
          return Triggered_Data;
       end;
    end Get_Processed_Data;

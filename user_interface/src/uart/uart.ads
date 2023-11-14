@@ -21,7 +21,6 @@ package Uart is
    ) return Readings_Array;
 
    function Get_Processed_Data (
-      Trigger_Level     : Float;
       Number_Of_Samples : Integer
    ) return Readings_Array;
 end Uart;

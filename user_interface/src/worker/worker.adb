@@ -27,7 +27,6 @@ package body Worker is
    begin
       --  Get data from UART
       Readings := Uart.Get_Processed_Data (
-         Trigger_Level => 1000.0,
          Number_Of_Samples => Number_Of_Samples * 2
       );
 
