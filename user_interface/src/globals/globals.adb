@@ -27,5 +27,5 @@ package body Globals is
       end Get_Board_State;
 
    end Board_State_Change;
-
+   
 end Globals;
