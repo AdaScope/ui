@@ -27,9 +27,7 @@ package body Uart is
       return New_Data;
    end Get_Triggered_Data;
 
-   function Get_Processed_Data (
-      Number_Of_Samples : Integer
-   ) return Readings_Array is
+   procedure Get_Processed_Data (Number_Of_Samples : Integer) is
       Triggered     : Boolean        := False;
       Capture_Start : Integer        := 1;
       Capture_End   : Integer        := Number_Of_Samples / 2;
@@ -91,7 +89,9 @@ package body Uart is
             Capture_Start => Capture_Start,
             Capture_End => Capture_End - 1
          );
-         return Triggered_Data;
+         --  return Triggered_Data;
+         --  Faut que cette procedure sache quel channel que c'est
+         Globals.UART_Data_Array.Set_Data_Array (1, Triggered_Data);
       end;
    end Get_Processed_Data;
 

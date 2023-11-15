@@ -20,7 +20,7 @@ package Uart is
       Capture_End   : Integer
    ) return Readings_Array;
 
-   function Get_Processed_Data (
+   procedure Get_Processed_Data (
       Number_Of_Samples : Integer
-   ) return Readings_Array;
+   );
 end Uart;

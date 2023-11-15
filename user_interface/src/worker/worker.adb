@@ -6,7 +6,6 @@ with Glib;              use Glib;
 
 with GNAT.Serial_Communications;
 with Globals;
-with Uart;
 
 use type Globals.Board_State;
 
@@ -15,25 +14,19 @@ package body Worker is
    --  Variables for data collection
    X : Integer := 0;
    Y : Float := 0.0;
-   Number_Of_Samples : constant Integer := 100;
-
-   --  Array for storing the data from the board
-   Readings : Uart.Readings_Array (1 .. Number_Of_Samples);
 
    --  Feeding data to oscilloscope
    procedure Feed_UART_Data (
       Scope     : Gtk_Oscilloscope;
       Channel   : Channel_Number) is
    begin
-      --  Get data from UART
-      Readings := Uart.Get_Processed_Data (
-         Number_Of_Samples => Number_Of_Samples * 2
-      );
 
       --  Feed data to the graph
-      for N in 1 .. Number_Of_Samples loop
+      for N in 1 .. Globals.Number_Of_Samples loop
          X := N;
-         Y := Readings (N);
+         Y := Globals.UART_Data_Array.Get_Data_Point
+                                       (Channel => Channel,
+                                       N => N);
 
          Scope.Feed
                (Channel => Channel,
