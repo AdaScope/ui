@@ -6,10 +6,6 @@ package Uart is
    type Readings_Array is array (Integer range <>) of Float;
    type Received_Bytes is array (Integer range <>) of Min_Ada.Byte;
 
-   --  To read the data
-   function Read (Number_Of_Samples : Integer)
-         return Readings_Array;
-
    function Get_Data (
       Number_Of_Samples : Integer
    ) return Readings_Array;
@@ -23,4 +19,13 @@ package Uart is
    procedure Get_Processed_Data (
       Number_Of_Samples : Integer
    );
+
+   --  To read the data
+   --  function Read (Number_Of_Samples : Integer)
+   --        return Readings_Array;
+
+   task type Read is
+      entry Start;
+      entry Stop;
+   end Read;
 end Uart;

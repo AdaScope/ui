@@ -1,20 +1,10 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with GNAT.Serial_Communications;
-with Ada.Float_Text_IO;
-with Ada.IO_Exceptions;
 with Ada.Streams;
 with Globals;
+with Min_Ada;
 
 package body Uart is
-
-   function Get_Data (
-      Number_Of_Samples : Integer
-   ) return Readings_Array is
-      Readings : Readings_Array (1 .. Number_Of_Samples);
-   begin
-      Readings := Read (Number_Of_Samples => Number_Of_Samples);
-      return Readings;
-   end Get_Data;
 
    function Get_Triggered_Data (
       Data          : Readings_Array;
@@ -27,16 +17,14 @@ package body Uart is
       return New_Data;
    end Get_Triggered_Data;
 
-   procedure Get_Processed_Data (Number_Of_Samples : Integer) is
+   procedure Get_Processed_Data (Channel : Channel_Number; Data : Readings_Array; Number_Of_Samples : Integer) is
       Triggered     : Boolean        := False;
       Capture_Start : Integer        := 1;
       Capture_End   : Integer        := Number_Of_Samples / 2;
-      Data          : Readings_Array (1 .. Number_Of_Samples);
       Data_Min      : Float          := 5000.0;  --  Oscilloscope max is 3000
       Data_Max      : Float          := 0.0;
       Trigger_Level : Float;
    begin
-      Data := Get_Data (Number_Of_Samples);
 
       for I in Data'Range loop
          Data_Min := Float'Min (Data_Min, Data (I));
@@ -91,79 +79,34 @@ package body Uart is
          );
          --  return Triggered_Data;
          --  Faut que cette procedure sache quel channel que c'est
-         Globals.UART_Data_Array.Set_Data_Array (1, Triggered_Data);
+         Globals.UART_Data_Array.Set_Data_Array (Channel, Triggered_Data);
       end;
    end Get_Processed_Data;
 
-   function Read (
-      Number_Of_Samples : Integer
-   ) return Readings_Array is
+   task body Read is --  À modifier pour protocole min
 
       --  Initialize the variables for the read
-      Buffer : Ada.Streams.Stream_Element_Array (1 .. 1);
-      Offset : Ada.Streams.Stream_Element_Offset := 1;
-
-      --  For storing one reading
-      Line       : String (1 .. 16);
-      Line_Index : Natural := Line'First;
-      Char       : Character;
-
-      --  To count the number of character readings done
-      Counter    : Integer := 1;
-
-      --  For storing all the readings
-      Readings   : Uart.Readings_Array (1 .. Number_Of_Samples);
+      Buffer   : Ada.Streams.Stream_Element_Array (1 .. 1);
+      Offset   : Ada.Streams.Stream_Element_Offset := 1;
+      Context  : in out Min_Ada.Min_Context;
 
    begin
+   
+      select -- Waiting for parameters or exit request
+         accept Start do
+         
+            Min_Ada.Min_Init_Context(Context => Context);
 
-      --  We initialize the string to eliminate warnings
-      for I in Line'Range loop
-         Line (I) := '0';
-      end loop;
+            loop
+               GNAT.Serial_Communications.Read (Globals.Port, Buffer, Offset);
+               Min_Ada.Rx_Bytes(Context, Buffer);
+            end loop;
+         end Start;
 
-      --  Make sure to only start collecting data at start of new line
-      loop
-         GNAT.Serial_Communications.Read (Globals.Port, Buffer, Offset);
-         exit when Character'Val (Buffer (1)) = ASCII.LF;
-      end loop;
+      or accept Stop;
+         raise Quit_Error;
+      end select;
 
-      --  Run until the we gathered the required number of samples
-      while Counter < Number_Of_Samples + 1 loop
-         begin
-
-            GNAT.Serial_Communications.Read (Globals.Port, Buffer, Offset);
-
-            --  Store the reading in the Char variable
-            Char := Character'Val (Buffer (1));
-
-            --  If we read the end of the line
-            --  and we are not a the beginning of a line
-            if Char = ASCII.LF and then Line_Index /= 1 then
-
-               --  We save the reading to an array
-               Ada.Float_Text_IO.Get
-                 (From => Line (1 .. Line_Index - 1),
-                  Item => Readings (Counter),
-                  Last => Line_Index);
-
-               --  We reset the line index and increment the counter
-               Line_Index := Line'First;
-               Counter := Counter + 1;
-
-            --  If we are not a the end of the line
-            elsif Char /= ASCII.LF then
-
-               --  We write the current character to
-               --  the current index of our line and increment the line
-               Line (Line_Index) := Char;
-               Line_Index := Line_Index + 1;
-            end if;
-         exception
-            when Ada.IO_Exceptions.Data_Error =>
-               Put_Line ("Data error");
-               Line_Index := Line_Index - 1;
-         end;
-      end loop;
-      return Readings;
+      accept Stop;
    end Read;
 end Uart;
