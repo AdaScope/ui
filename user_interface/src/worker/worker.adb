@@ -26,8 +26,9 @@ package body Worker is
       Channel   : Channel_Number) is
    begin
       --  Get data from UART
-      Readings := Uart.Read
-        (Number_Of_Samples => Number_Of_Samples);
+      Readings := Uart.Get_Processed_Data (
+         Number_Of_Samples => Number_Of_Samples * 2
+      );
 
       --  Feed data to the graph
       for N in 1 .. Number_Of_Samples loop
