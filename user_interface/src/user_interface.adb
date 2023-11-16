@@ -13,7 +13,10 @@ with Gtk.Table;             use Gtk.Table;
 with Gtk.Box;               use Gtk.Box;
 with Glib;                  use Glib;
 
-with Gtk.Oscilloscope.Channels_Panel; use Gtk.Oscilloscope.Channels_Panel;
+with Gtk.Oscilloscope.Channels_Panel;
+   use Gtk.Oscilloscope.Channels_Panel;
+with Gtk.Oscilloscope.Sweeper_Panel;
+   use Gtk.Oscilloscope.Sweeper_Panel;
 with GNAT.Serial_Communications;
 with Ada.Unchecked_Conversion;
 with Gtk.Layered;
@@ -39,11 +42,11 @@ procedure User_Interface is
                           GNAT.Serial_Communications.Port_Name :=
                           "/dev/ttyACM0";
 
+   task Connect_Oscilloscope;
+
 --
 --  Connect_Oscilloscope
 --
-   task Connect_Oscilloscope;
-
    task body Connect_Oscilloscope is
    begin
       Has_Been_Notified := False;
@@ -90,19 +93,6 @@ procedure User_Interface is
          end if;
       end loop;
    end Connect_Oscilloscope;
---
---  Delete_Event -- Window closing notification event
---
-   function Delete_Event return Boolean is
-   begin
-      Writer_Ch_1.Stop; -- Stop the computation process
-      Writer_Ch_2.Stop; -- Stop the computation process
-      Writer_Ch_3.Stop; -- Stop the computation process
-      return False;    -- Confirm completion exception
-   exception
-      when Tasking_Error =>
-         return False;
-   end Delete_Event;
 
 --
 --  Start_Oscilloscope
@@ -124,7 +114,7 @@ procedure User_Interface is
          Upper => To,
          Step_Increment => Width / 100.0,
          Page_Increment => Width / 10.0,
-         Page_Size      => Width
+         Page_Size      => Width / 2.0
       );
       --  Protected object
       --  Initiate writing process channel 1
@@ -142,6 +132,20 @@ procedure User_Interface is
          Say (Exception_Information (Error));
    end Start_Oscilloscope;
 
+--
+--  Delete_Event -- Window closing notification event
+--
+   function Delete_Event return Boolean is
+   begin
+      Writer_Ch_1.Stop; -- Stop the computation process
+      Writer_Ch_2.Stop; -- Stop the computation process
+      Writer_Ch_3.Stop; -- Stop the computation process
+      return False;    -- Confirm completion exception
+   exception
+      when Tasking_Error =>
+         return False;
+   end Delete_Event;
+
    type Local_Delete_Callback is access function  return Boolean;
    function "+" is
       new Ada.Unchecked_Conversion
@@ -157,10 +161,12 @@ begin
    Window.On_Destroy (Gtk.Missed.Destroy_Handler'Access);
 
    declare
-      Pane      : Gtk_Hbox;                        --  Main panel
-      Panels    : Gtk_Table;                       --  Right half, channels
-      Frame     : Gtk_Frame;                       --  Left half, oscilloscope
-      Channels  : Gtk_Oscilloscope_Channels_Panel; --  Channel checkboxes
+      Pane           : Gtk_Hbox;                        --  Main panel
+      Panels         : Gtk_Table;                       --  Channels panel
+      Frame          : Gtk_Frame;                       --  Oscilloscope
+      Channels       : Gtk_Oscilloscope_Channels_Panel; --  Channel checkboxes
+      Sweeper        : Gtk_Oscilloscope_Sweeper_Panel;
+      --  X_Axis_Range   : Gtk_Entry;
    begin
 
       --  Connect_Oscilloscope;
@@ -179,12 +185,12 @@ begin
       --
       --  Configuring the lower axis
       --    No sweeping
-      --    No scale (slider)
+      --    Yes scale (slider)
       --    Grid
       --    Visible as plain numbers
       --
       Oscilloscope.Set_Frozen       (Lower, True);
-      Oscilloscope.Set_Time_Scale   (Lower, False);
+      Oscilloscope.Set_Time_Scale   (Lower, True);
       Oscilloscope.Set_Time_Grid    (Lower, True);
       Oscilloscope.Set_Time_Axis    (Lower, True, False);
       Oscilloscope.Set_Grid_Colors  (
@@ -232,7 +238,7 @@ begin
       Frame.Add (Oscilloscope);
       Frame.Set_Size_Request (300, 210);
 
-      Gtk_New (Panels, 3, 1, False);
+      Gtk_New (Panels, 4, 1, False);
       Pane.Pack_Start (Panels, False, False);
 
       --  Channels
@@ -241,6 +247,13 @@ begin
       Gtk_New (Channels, Oscilloscope);
       Channels.Set_Border_Width (3);
       Frame.Add (Channels);
+
+      --  Input
+      Gtk_New (Frame, "Lower sweeper");
+      Panels.Attach (Frame, 0, 1, 2, 3, Yoptions => Shrink or Fill);
+      Gtk_New (Sweeper, Oscilloscope, Lower);
+      Sweeper.Set_Border_Width (3);
+      Frame.Add (Sweeper);
 
    end;
    declare
