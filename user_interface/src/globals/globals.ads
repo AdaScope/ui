@@ -1,4 +1,3 @@
-with Gtk.Oscilloscope;      use Gtk.Oscilloscope;
 with GNAT.Serial_Communications;
 with Uart;
 
@@ -14,6 +13,11 @@ package Globals is
    );
 
    Number_Of_Samples : constant Integer := 100;
+
+   type Readings_Buffer is record
+      Data  : Uart.Readings_Array (1 .. Number_Of_Samples);
+      Index : Integer;
+   end record;
 
    protected Board_State_Change is
 
@@ -33,29 +37,42 @@ package Globals is
    protected UART_Data_Array is
 
       procedure Set_Data_Array (
-                  Channel : Channel_Number;
-                  Data_Array : Uart.Readings_Array);
+         Channel : Integer;
+         Data_Array : Uart.Readings_Array
+      );
       --  Sets the data array
 
       function Get_Data_Array (
-                  Channel : Channel_Number)
-                  return Uart.Readings_Array;
+         Channel : Integer
+      ) return Uart.Readings_Array;
       --  Gets the data array
 
       function Get_Data_Point (
-                  Channel : Channel_Number;
-                  N : Integer)
-                  return Float;
+         Channel : Integer;
+         N : Integer
+      ) return Float;
       --  Gets the data array
+
+      procedure Set_Readings_Buffer (
+         Channel : Integer;
+         Data    : Float
+      );
+      --  Sets the buffer value at the current index
 
    private
       --  Arrays for storing the data from the board
-      Readings_CH_1 : Uart.Readings_Array
-         (1 .. Number_Of_Samples) := (others => 0.0);
-      Readings_CH_2 : Uart.Readings_Array
-         (1 .. Number_Of_Samples) := (others => 0.0);
-      Readings_CH_3 : Uart.Readings_Array
-         (1 .. Number_Of_Samples) := (others => 0.0);
+      Processed_Data_Channel_1 : Uart.Readings_Array
+         (1 .. Number_Of_Samples / 2) := (others => 0.0);
+      Readings_Buffer_Channel_1 : Readings_Buffer;
+
+      Processed_Data_Channel_2 : Uart.Readings_Array
+         (1 .. Number_Of_Samples / 2) := (others => 0.0);
+      Readings_Buffer_Channel_2 : Readings_Buffer;
+
+      Processed_Data_Channel_3 : Uart.Readings_Array
+         (1 .. Number_Of_Samples / 2) := (others => 0.0);
+      Readings_Buffer_Channel_3 : Readings_Buffer;
+
    end UART_Data_Array;
 
 end Globals;

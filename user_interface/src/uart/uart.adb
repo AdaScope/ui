@@ -1,5 +1,5 @@
-with Ada.Text_IO; use Ada.Text_IO;
 with GNAT.Serial_Communications;
+with Gtk.Main.Router;
 with Ada.Streams;
 with Globals;
 with Min_Ada;
@@ -17,7 +17,11 @@ package body Uart is
       return New_Data;
    end Get_Triggered_Data;
 
-   procedure Get_Processed_Data (Channel : Channel_Number; Data : Readings_Array; Number_Of_Samples : Integer) is
+   procedure Process_Data (
+      Channel : Integer;
+      Data : Readings_Array;
+      Number_Of_Samples : Integer
+   ) is
       Triggered     : Boolean        := False;
       Capture_Start : Integer        := 1;
       Capture_End   : Integer        := Number_Of_Samples / 2;
@@ -81,30 +85,37 @@ package body Uart is
          --  Faut que cette procedure sache quel channel que c'est
          Globals.UART_Data_Array.Set_Data_Array (Channel, Triggered_Data);
       end;
-   end Get_Processed_Data;
+   end Process_Data;
 
    task body Read is --  À modifier pour protocole min
 
       --  Initialize the variables for the read
       Buffer   : Ada.Streams.Stream_Element_Array (1 .. 1);
       Offset   : Ada.Streams.Stream_Element_Offset := 1;
-      Context  : in out Min_Ada.Min_Context;
+      Context  : Min_Ada.Min_Context;
 
    begin
-   
+
       select -- Waiting for parameters or exit request
          accept Start do
-         
-            Min_Ada.Min_Init_Context(Context => Context);
+
+            Min_Ada.Min_Init_Context (Context => Context);
 
             loop
-               GNAT.Serial_Communications.Read (Globals.Port, Buffer, Offset);
-               Min_Ada.Rx_Bytes(Context, Buffer);
+               GNAT.Serial_Communications.Read (
+                  Port   => Globals.Port,
+                  Buffer => Buffer,
+                  Last   => Offset
+               );
+               Min_Ada.Rx_Bytes (
+                  Context => Context,
+                  Data => Min_Ada.Byte (Buffer (1))
+               );
             end loop;
          end Start;
 
       or accept Stop;
-         raise Quit_Error;
+         raise Gtk.Main.Router.Quit_Error;
       end select;
 
       accept Stop;

@@ -18,21 +18,23 @@ package body Worker is
    --  Feeding data to oscilloscope
    procedure Feed_UART_Data (
       Scope     : Gtk_Oscilloscope;
-      Channel   : Channel_Number) is
+      Channel   : Channel_Number
+   ) is
    begin
 
       --  Feed data to the graph
       for N in 1 .. Globals.Number_Of_Samples loop
          X := N;
-         Y := Globals.UART_Data_Array.Get_Data_Point
-                                       (Channel => Channel,
-                                       N => N);
+         Y := Globals.UART_Data_Array.Get_Data_Point (
+            Channel => Integer'Val (Channel),
+            N => N
+         );
 
-         Scope.Feed
-               (Channel => Channel,
-                  T     => Gdouble (X),
-                  V     => Gdouble (Y)
-               );
+         Scope.Feed (
+            Channel => Channel,
+            T     => Gdouble (X),
+            V     => Gdouble (Y)
+         );
       end loop;
    end Feed_UART_Data;
 

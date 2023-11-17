@@ -36,16 +36,17 @@ package body Globals is
       -- Set_Data_Array --
       ---------------------
       procedure Set_Data_Array (
-                  Channel : Channel_Number;
-                  Data_Array : Uart.Readings_Array) is
+         Channel : Integer;
+         Data_Array : Uart.Readings_Array
+      ) is
       begin
          case Channel is
             when 1 =>
-               Readings_CH_1 := Data_Array;
+               Processed_Data_Channel_1 := Data_Array;
             when 2 =>
-               Readings_CH_2 := Data_Array;
+               Processed_Data_Channel_2 := Data_Array;
             when 3 =>
-               Readings_CH_3 := Data_Array;
+               Processed_Data_Channel_3 := Data_Array;
             when others =>
                Put_Line ("Error - wrong channel entered");
                Put_Line (Channel'Image);
@@ -55,18 +56,19 @@ package body Globals is
       ---------------------
       -- Get_Data_Array --
       ---------------------
-      function Get_Data_Array (Channel : Channel_Number) 
-                                 return Uart.Readings_Array is
+      function Get_Data_Array (
+         Channel : Integer
+      ) return Uart.Readings_Array is
          Default_Array : constant Uart.Readings_Array
             (1 .. Number_Of_Samples) := (others => 0.0);
       begin
          case Channel is
             when 1 =>
-               return Readings_CH_1;
+               return Processed_Data_Channel_1;
             when 2 =>
-               return Readings_CH_2;
+               return Processed_Data_Channel_2;
             when 3 =>
-               return Readings_CH_3;
+               return Processed_Data_Channel_3;
             when others =>
                Put_Line ("Error - wrong channel entered");
                Put_Line (Channel'Image);
@@ -77,23 +79,80 @@ package body Globals is
       ---------------------
       -- Get_Data_Point --
       ---------------------
-      function Get_Data_Point (Channel : Channel_Number;
-                                 N : Integer)
-                                 return Float is
+      function Get_Data_Point (
+         Channel : Integer;
+         N : Integer
+      ) return Float is
       begin
          case Channel is
             when 1 =>
-               return Readings_CH_1 (N);
+               return Processed_Data_Channel_1 (N);
             when 2 =>
-               return Readings_CH_2 (N);
+               return Processed_Data_Channel_2 (N);
             when 3 =>
-               return Readings_CH_3 (N);
+               return Processed_Data_Channel_3 (N);
             when others =>
                Put_Line ("Error - wrong channel entered");
                Put_Line (Channel'Image);
                return 0.0;
          end case;
       end Get_Data_Point;
+
+      procedure Set_Readings_Buffer (
+         Channel : Integer;
+         Data    : Float
+      ) is
+      begin
+         case Channel is
+            when 1 =>
+               Readings_Buffer_Channel_1.Data
+                  (Readings_Buffer_Channel_1.Index) := Data;
+               if Readings_Buffer_Channel_1.Index < Number_Of_Samples then
+                  Readings_Buffer_Channel_1.Index :=
+                     Readings_Buffer_Channel_1.Index + 1;
+               else
+                  Readings_Buffer_Channel_1.Index := 1;
+                  Uart.Process_Data (
+                     Channel           => 1,
+                     Data              => Readings_Buffer_Channel_1.Data,
+                     Number_Of_Samples => Number_Of_Samples
+                  );
+               end if;
+
+            when 2 =>
+               Readings_Buffer_Channel_2.Data
+                  (Readings_Buffer_Channel_2.Index) := Data;
+               if Readings_Buffer_Channel_2.Index < Number_Of_Samples then
+                  Readings_Buffer_Channel_2.Index :=
+                     Readings_Buffer_Channel_2.Index + 1;
+               else
+                  Readings_Buffer_Channel_2.Index := 1;
+                  Uart.Process_Data (
+                     Channel           => 2,
+                     Data              => Readings_Buffer_Channel_2.Data,
+                     Number_Of_Samples => Number_Of_Samples
+                  );
+               end if;
+
+            when 3 =>
+               Readings_Buffer_Channel_3.Data
+                  (Readings_Buffer_Channel_3.Index) := Data;
+               if Readings_Buffer_Channel_3.Index < Number_Of_Samples then
+                  Readings_Buffer_Channel_3.Index :=
+                     Readings_Buffer_Channel_3.Index + 1;
+               else
+                  Readings_Buffer_Channel_3.Index := 1;
+                  Uart.Process_Data (
+                     Channel           => 3,
+                     Data              => Readings_Buffer_Channel_3.Data,
+                     Number_Of_Samples => Number_Of_Samples
+                  );
+               end if;
+            when others =>
+               Put_Line ("Error - Wrong channel entered");
+               Put_Line (Channel'Image);
+         end case;
+      end Set_Readings_Buffer;
 
    end UART_Data_Array;
 
