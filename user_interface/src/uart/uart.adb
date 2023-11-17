@@ -83,7 +83,7 @@ package body Uart is
          );
          --  return Triggered_Data;
          --  Faut que cette procedure sache quel channel que c'est
-         Globals.UART_Data_Array.Set_Data_Array (Channel, Triggered_Data);
+         Globals.Processed_Data.Set_Data (Channel, Triggered_Data);
       end;
    end Process_Data;
 

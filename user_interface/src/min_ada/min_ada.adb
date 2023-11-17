@@ -101,7 +101,7 @@ package body Min_Ada is
             System.CRC32.Update (Context.Rx_Checksum, Character'Val (Data));
 
             if Context.Rx_Frame_Length > 0 then
-               Context.Rx_Frame_State := SEARCHING_FOR_SOF;
+               Context.Rx_Frame_State := RECEIVING_PAYLOAD;
             else
                Context.Rx_Frame_State := RECEIVING_CHECKSUM_4;
             end if;
@@ -239,7 +239,7 @@ package body Min_Ada is
          --  and we are not a the beginning of a line
          if Current_Digit = ASCII.LF and then Reading_Index > 1 then
             --  We save the reading to an array
-            Globals.UART_Data_Array.Set_Readings_Buffer (
+            Globals.Buffered_Data.Set_Data (
                Channel => Integer'Value (ID'Image),
                Data => Float'Value (Reading (1 .. Reading_Index))
             );

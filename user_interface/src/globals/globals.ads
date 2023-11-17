@@ -34,15 +34,15 @@ package Globals is
       Current_Board_State : Board_State := Disconnected;
    end Board_State_Change;
 
-   protected UART_Data_Array is
+   protected Processed_Data is
 
-      procedure Set_Data_Array (
+      procedure Set_Data (
          Channel : Integer;
          Data_Array : Uart.Readings_Array
       );
       --  Sets the data array
 
-      function Get_Data_Array (
+      function Get_Data (
          Channel : Integer
       ) return Uart.Readings_Array;
       --  Gets the data array
@@ -53,26 +53,35 @@ package Globals is
       ) return Float;
       --  Gets the data array
 
-      procedure Set_Readings_Buffer (
+   private
+      --  Arrays storing the processed data
+      Processed_Data_Channel_1 : Uart.Readings_Array
+         (1 .. Number_Of_Samples / 2) := (others => 0.0);
+
+      Processed_Data_Channel_2 : Uart.Readings_Array
+         (1 .. Number_Of_Samples / 2) := (others => 0.0);
+
+      Processed_Data_Channel_3 : Uart.Readings_Array
+         (1 .. Number_Of_Samples / 2) := (others => 0.0);
+
+   end Processed_Data;
+
+   protected Buffered_Data is
+
+      procedure Set_Data (
          Channel : Integer;
          Data    : Float
       );
       --  Sets the buffer value at the current index
 
    private
-      --  Arrays for storing the data from the board
-      Processed_Data_Channel_1 : Uart.Readings_Array
-         (1 .. Number_Of_Samples / 2) := (others => 0.0);
+      --  Arrays storing the raw data used as a buffer
       Readings_Buffer_Channel_1 : Readings_Buffer;
 
-      Processed_Data_Channel_2 : Uart.Readings_Array
-         (1 .. Number_Of_Samples / 2) := (others => 0.0);
       Readings_Buffer_Channel_2 : Readings_Buffer;
 
-      Processed_Data_Channel_3 : Uart.Readings_Array
-         (1 .. Number_Of_Samples / 2) := (others => 0.0);
       Readings_Buffer_Channel_3 : Readings_Buffer;
 
-   end UART_Data_Array;
+   end Buffered_Data;
 
 end Globals;

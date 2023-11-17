@@ -30,12 +30,12 @@ package body Globals is
 
    end Board_State_Change;
 
-   protected body UART_Data_Array is
+   protected body Processed_Data is
 
       ---------------------
       -- Set_Data_Array --
       ---------------------
-      procedure Set_Data_Array (
+      procedure Set_Data (
          Channel : Integer;
          Data_Array : Uart.Readings_Array
       ) is
@@ -51,12 +51,12 @@ package body Globals is
                Put_Line ("Error - wrong channel entered");
                Put_Line (Channel'Image);
          end case;
-      end Set_Data_Array;
+      end Set_Data;
 
       ---------------------
       -- Get_Data_Array --
       ---------------------
-      function Get_Data_Array (
+      function Get_Data (
          Channel : Integer
       ) return Uart.Readings_Array is
          Default_Array : constant Uart.Readings_Array
@@ -74,7 +74,7 @@ package body Globals is
                Put_Line (Channel'Image);
                return Default_Array;
          end case;
-      end Get_Data_Array;
+      end Get_Data;
 
       ---------------------
       -- Get_Data_Point --
@@ -97,8 +97,11 @@ package body Globals is
                return 0.0;
          end case;
       end Get_Data_Point;
+   end Processed_Data;
 
-      procedure Set_Readings_Buffer (
+   protected body Buffered_Data is
+
+      procedure Set_Data (
          Channel : Integer;
          Data    : Float
       ) is
@@ -152,8 +155,7 @@ package body Globals is
                Put_Line ("Error - Wrong channel entered");
                Put_Line (Channel'Image);
          end case;
-      end Set_Readings_Buffer;
-
-   end UART_Data_Array;
+      end Set_Data;
+   end Buffered_Data;
 
 end Globals;
