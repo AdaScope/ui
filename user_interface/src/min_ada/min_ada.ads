@@ -120,7 +120,8 @@ package Min_Ada is
 
    procedure Min_Application_Handler (
       ID             : App_ID;
-      Payload        : Min_Payload
+      Payload        : Min_Payload;
+      Payload_Length : Byte
    );
 
 end Min_Ada;

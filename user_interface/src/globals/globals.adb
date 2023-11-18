@@ -37,19 +37,19 @@ package body Globals is
       ---------------------
       procedure Set_Data (
          Channel : Integer;
-         Data_Array : Uart.Readings_Array
+         Data    : Uart.Readings_Array
       ) is
       begin
          case Channel is
             when 1 =>
-               Processed_Data_Channel_1 := Data_Array;
+               Processed_Data_Channel_1 := Data;
             when 2 =>
-               Processed_Data_Channel_2 := Data_Array;
+               Processed_Data_Channel_2 := Data;
             when 3 =>
-               Processed_Data_Channel_3 := Data_Array;
+               Processed_Data_Channel_3 := Data;
             when others =>
-               Put_Line ("Error - wrong channel entered");
-               Put_Line (Channel'Image);
+               Put_Line ("Error Processed_Data.Set_Data");
+               Put_Line ("Wrong channel entered:" & Channel'Image);
          end case;
       end Set_Data;
 
@@ -70,8 +70,8 @@ package body Globals is
             when 3 =>
                return Processed_Data_Channel_3;
             when others =>
-               Put_Line ("Error - wrong channel entered");
-               Put_Line (Channel'Image);
+               Put_Line ("Error Processed_Data.Get_Data");
+               Put_Line ("Wrong channel entered:" & Channel'Image);
                return Default_Array;
          end case;
       end Get_Data;
@@ -92,8 +92,8 @@ package body Globals is
             when 3 =>
                return Processed_Data_Channel_3 (N);
             when others =>
-               Put_Line ("Error - wrong channel entered");
-               Put_Line (Channel'Image);
+               Put_Line ("Error Processed_Data.Get_Data_Point");
+               Put_Line ("Wrong channel entered:" & Channel'Image);
                return 0.0;
          end case;
       end Get_Data_Point;
@@ -152,8 +152,8 @@ package body Globals is
                   );
                end if;
             when others =>
-               Put_Line ("Error - Wrong channel entered");
-               Put_Line (Channel'Image);
+               Put_Line ("Error Buffered_Data.Set_Data");
+               Put_Line ("Wrong channel entered:" & Channel'Image);
          end case;
       end Set_Data;
    end Buffered_Data;

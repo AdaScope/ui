@@ -16,7 +16,7 @@ package Globals is
 
    type Readings_Buffer is record
       Data  : Uart.Readings_Array (1 .. Number_Of_Samples);
-      Index : Integer;
+      Index : Integer := 1;
    end record;
 
    protected Board_State_Change is
@@ -38,7 +38,7 @@ package Globals is
 
       procedure Set_Data (
          Channel : Integer;
-         Data_Array : Uart.Readings_Array
+         Data    : Uart.Readings_Array
       );
       --  Sets the data array
 
@@ -49,7 +49,7 @@ package Globals is
 
       function Get_Data_Point (
          Channel : Integer;
-         N : Integer
+         N       : Integer
       ) return Float;
       --  Gets the data array
 

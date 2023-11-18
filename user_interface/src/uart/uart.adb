@@ -22,69 +22,73 @@ package body Uart is
       Data : Readings_Array;
       Number_Of_Samples : Integer
    ) is
-      Triggered     : Boolean        := False;
-      Capture_Start : Integer        := 1;
-      Capture_End   : Integer        := Number_Of_Samples / 2;
-      Data_Min      : Float          := 5000.0;  --  Oscilloscope max is 3000
-      Data_Max      : Float          := 0.0;
-      Trigger_Level : Float;
+      --  Denotes the start and end of the captured data
+      --  This will be a subset of the data comming  in
+      --  and will be half its size
+      Capture_Start  : Integer := 1;
+      Capture_End    : Integer := Number_Of_Samples / 2;
+
+      Data_Min       : Float   := 5000.0;  --  Oscilloscope max is 3000
+      Data_Max       : Float   := 0.0;
+
+      Trigger_Level  : Float;
+
+      Positive_Slope : Boolean := False;
    begin
 
+      --  Set the trigger point in the center
       for I in Data'Range loop
          Data_Min := Float'Min (Data_Min, Data (I));
          Data_Max := Float'Max (Data_Max, Data (I));
       end loop;
-
       Trigger_Level := (Data_Min + Data_Max) / 2.0;
 
       for I in Data'Range loop
-         --  Check if can be triggered
+
+         --  Check if in the correct range for trigger
          if Data (I) > Trigger_Level - 100.0 and then
-            Data (I) < Trigger_Level + 100.0 and then
-            not Triggered
+            Data (I) < Trigger_Level + 100.0
          then
-            --  Check for correct slope
+
+            --  Check if positive slope
             if I + 3 <= Number_Of_Samples then
                if Data (I) < Data (I + 3) then
-                  Triggered := True;
+                  Positive_Slope := True;
+               else
+                  Positive_Slope := False;
                end if;
             elsif I - 3 >= 1 then
                if Data (I - 3) < Data (I) then
-                  Triggered := True;
+                  Positive_Slope := True;
+               else
+                  Positive_Slope := False;
                end if;
             end if;
 
-            if Triggered then
-               --  Find trigger point and collect data before and after
-               Capture_Start :=
-                  Integer'Max (1, I - (Number_Of_Samples / 4));
-               Capture_End   :=
-                  Integer'Min (Data'Last, I + (Number_Of_Samples / 4));
+            --  Check if trigger in correct range
+            --  to be able to take enough data to its left and its right
+            if Positive_Slope then
+               if I - (Number_Of_Samples / 4) + 1 >= 1 and then
+                  I + (Number_Of_Samples / 4) <= Number_Of_Samples
+               then
+                  Capture_Start := I - (Number_Of_Samples / 4) + 1;
+                  Capture_End := I + (Number_Of_Samples / 4);
+               end if;
 
-               if Capture_End - Capture_Start /= Number_Of_Samples / 2 then
+               if (Capture_End - Capture_Start) /=
+                  (Number_Of_Samples / 2) - 1
+               then
                   Capture_Start := 1;
                   Capture_End   := Number_Of_Samples / 2;
-                  Triggered := False;
                end if;
             end if;
-
-            exit when Triggered;
-
          end if;
       end loop;
 
-      declare
-         Triggered_Data : Readings_Array (Capture_Start .. Capture_End - 1);
-      begin
-         Triggered_Data := Get_Triggered_Data (
-            Data => Data,
-            Capture_Start => Capture_Start,
-            Capture_End => Capture_End - 1
-         );
-         --  return Triggered_Data;
-         --  Faut que cette procedure sache quel channel que c'est
-         Globals.Processed_Data.Set_Data (Channel, Triggered_Data);
-      end;
+      Globals.Processed_Data.Set_Data (
+         Channel => Channel,
+         Data    => Data (Capture_Start .. Capture_End)
+      );
    end Process_Data;
 
    task body Read is --  À modifier pour protocole min

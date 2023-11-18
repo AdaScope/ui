@@ -156,15 +156,11 @@ package body Min_Ada is
       Context : Min_Context
    ) is
    begin
-      Put ("Rx_Frame_ID_Control: ");
-      Put_Line (Context.Rx_Frame_ID_Control'Image);
-      Put ("Rx_Frame_Payload_Bytes: ");
-      Put_Line (Context.Rx_Frame_Payload_Bytes'Image);
-
-      for P in 1 .. Context.Rx_Frame_Payload_Bytes loop
-         Put ("Payload: ");
-         Put_Line (Context.Rx_Frame_Payload_Buffer (P)'Image);
-      end loop;
+      Min_Application_Handler (
+         ID      => App_ID (Context.Rx_Frame_ID_Control),
+         Payload => Context.Rx_Frame_Payload_Buffer,
+         Payload_Length => Context.Rx_Frame_Payload_Bytes
+      );
    end Valid_Frame_Received;
 
    procedure Tx_Byte (
@@ -225,36 +221,52 @@ package body Min_Ada is
 
    procedure Min_Application_Handler (
       ID             : App_ID;
-      Payload        : Min_Payload
+      Payload        : Min_Payload;
+      Payload_Length : Byte
    ) is
       --  For storing one reading
-      Reading       : String (1 .. 4) := "0000";
-      Reading_Index : Natural := Reading'First;
-      Current_Digit : Character;
+      Reading        : String (1 .. 4) := "0000";
+      Reading_Index  : Integer := 1;
+      Current_Digit  : Character;
    begin
 
-      for I in Payload'Range loop
-         Current_Digit := Character'Val (Payload (I));
-         --  If we read the end of the line
-         --  and we are not a the beginning of a line
-         if Current_Digit = ASCII.LF and then Reading_Index > 1 then
-            --  We save the reading to an array
-            Globals.Buffered_Data.Set_Data (
-               Channel => Integer'Value (ID'Image),
-               Data => Float'Value (Reading (1 .. Reading_Index))
-            );
-            --  We reset the line index and increment the counter
-            Reading_Index := Reading'First;
+      for I in 1 .. Integer'Val (Payload_Length) loop
+         Current_Digit := Character'Val (Payload (Byte (I)));
 
-         --  If we are not a the end of the line
-         elsif Current_Digit /= ASCII.LF then
-            --  We write the current character to
-            --  the current index of our line and increment the line
-            Reading (Reading_Index) := Current_Digit;
+         --  Check if lenght ok
+         if Reading_Index > 5 then
+            Reading_Index  := 1;
+
+         --  If we read a line ending
+         elsif Current_Digit = ASCII.LF then
+
+            --  Reading is empty
+            if Reading_Index = 1 then
+               --  TODO Do not send anything
+               null;
+
+            --  Reading ok
+            elsif Reading_Index > 1 then
+               Globals.Buffered_Data.Set_Data (
+                  Channel => Integer'Value (ID'Image),
+                  Data => Float'Value (Reading (1 .. Reading_Index - 1))
+               );
+
+               --  We reset the reading index
+               Reading_Index := 1;
+            end if;
+
+         --  If we do not read a line ending
+         else
+            --  Reading not full
+            if Reading_Index <= 4 then
+               --  We save the current digit to
+               --  the current index of our reading and increment the index
+               Reading (Reading_Index) := Current_Digit;
+            end if;
             Reading_Index := Reading_Index + 1;
          end if;
       end loop;
-
    end Min_Application_Handler;
 
 end Min_Ada;
