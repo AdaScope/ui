@@ -3,12 +3,7 @@ package Uart is
    --  Type for the values returned by Read function
    type Readings_Array is array (Integer range <>) of Float;
 
-   function Get_Triggered_Data (
-      Data          : Readings_Array;
-      Capture_Start : Integer;
-      Capture_End   : Integer
-   ) return Readings_Array;
-
+   --  Implements triggering to keep the data (mostly) still
    procedure Process_Data (
       Channel           : Integer;
       Data              : Readings_Array;

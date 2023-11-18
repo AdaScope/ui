@@ -6,17 +6,6 @@ with Min_Ada;
 
 package body Uart is
 
-   function Get_Triggered_Data (
-      Data          : Readings_Array;
-      Capture_Start : Integer;
-      Capture_End   : Integer
-   ) return Readings_Array is
-      New_Data      : Readings_Array (Capture_Start .. Capture_End);
-   begin
-      New_Data := Data (Capture_Start .. Capture_End);
-      return New_Data;
-   end Get_Triggered_Data;
-
    procedure Process_Data (
       Channel : Integer;
       Data : Readings_Array;
@@ -28,11 +17,14 @@ package body Uart is
       Capture_Start  : Integer := 1;
       Capture_End    : Integer := Number_Of_Samples / 2;
 
-      Data_Min       : Float   := 5000.0;  --  Oscilloscope max is 3000
-      Data_Max       : Float   := 0.0;
+      --  To find the center point of the wave
+      Data_Min       : Float   := 5000.0; --  Higher than physical max (3000)
+      Data_Max       : Float   := 0.0;    --  Lower or equal to max
 
+      --  The voltage value of the middle of the wave
       Trigger_Level  : Float;
 
+      --  To check if the slope of the wave is positive
       Positive_Slope : Boolean := False;
    begin
 
@@ -43,9 +35,10 @@ package body Uart is
       end loop;
       Trigger_Level := (Data_Min + Data_Max) / 2.0;
 
+      --  Loop over all the data buffer
       for I in Data'Range loop
 
-         --  Check if in the correct range for trigger
+         --  Check if data in the trigger range
          if Data (I) > Trigger_Level - 100.0 and then
             Data (I) < Trigger_Level + 100.0
          then
@@ -67,6 +60,7 @@ package body Uart is
 
             --  Check if trigger in correct range
             --  to be able to take enough data to its left and its right
+            --  (trigger will be in center)
             if Positive_Slope then
                if I - (Number_Of_Samples / 4) + 1 >= 1 and then
                   I + (Number_Of_Samples / 4) <= Number_Of_Samples
@@ -75,6 +69,8 @@ package body Uart is
                   Capture_End := I + (Number_Of_Samples / 4);
                end if;
 
+               --  Make sure we have the correct number of samples
+               --  (Should be half of the data buffer)
                if (Capture_End - Capture_Start) /=
                   (Number_Of_Samples / 2) - 1
                then
@@ -85,19 +81,21 @@ package body Uart is
          end if;
       end loop;
 
+      --  Save the processed data in the processed data array
       Globals.Processed_Data.Set_Data (
          Channel => Channel,
          Data    => Data (Capture_Start .. Capture_End)
       );
    end Process_Data;
 
-   task body Read is --  À modifier pour protocole min
+   task body Read is
 
-      --  Initialize the variables for the read
+      --  Variables for the serial read
       Buffer   : Ada.Streams.Stream_Element_Array (1 .. 1);
       Offset   : Ada.Streams.Stream_Element_Offset := 1;
-      Context  : Min_Ada.Min_Context;
 
+      --  Context for the min protocol
+      Context  : Min_Ada.Min_Context;
    begin
 
       select -- Waiting for parameters or exit request
@@ -106,11 +104,13 @@ package body Uart is
             Min_Ada.Min_Init_Context (Context => Context);
 
             loop
+               --  Read data from serial port
                GNAT.Serial_Communications.Read (
                   Port   => Globals.Port,
                   Buffer => Buffer,
                   Last   => Offset
                );
+               --  Send data to protocol for processing
                Min_Ada.Rx_Bytes (
                   Context => Context,
                   Data => Min_Ada.Byte (Buffer (1))
