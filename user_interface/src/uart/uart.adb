@@ -39,8 +39,8 @@ package body Uart is
       for I in Data'Range loop
 
          --  Check if data in the trigger range
-         if Data (I) > Trigger_Level - 100.0 and then
-            Data (I) < Trigger_Level + 100.0
+         if Data (I) > Trigger_Level - 25.0 and then
+            Data (I) < Trigger_Level + 25.0
          then
 
             --  Check if positive slope

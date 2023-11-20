@@ -67,7 +67,7 @@ procedure User_Interface is
 
                   GNAT.Serial_Communications.Set
                      (Port => Globals.Port,
-                     Rate => GNAT.Serial_Communications.B115200);
+                     Rate => GNAT.Serial_Communications.B921600);
                exception
                   when GNAT.Serial_Communications.Serial_Error =>
                      Put_Line ("Serial Error - Board not connected");
@@ -107,7 +107,7 @@ procedure User_Interface is
       Width : Gdouble;
    begin
       From  := Gdouble (0);   -- X axis start value
-      To    := Gdouble (100); -- X axis end value
+      To    := Gdouble (250); -- X axis end value
       Width := To - From;
 
       --  Set page size of the scope

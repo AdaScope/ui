@@ -234,6 +234,14 @@ package body Min_Ada is
       Current_Digit  : Character;
    begin
 
+      --  Check if fist frame to reset the buffers (this makes sure the
+      --  data in the buffers is always contiguous
+      if ID = 5 or else ID = 6 or else ID = 7 then
+         Globals.Buffered_Data.Reset_Buffer (
+            Channel => Integer'Value (ID'Image)
+         );
+      end if;
+
       --  Loop over all the data in the payload
       for I in 1 .. Integer'Val (Payload_Length) loop
 

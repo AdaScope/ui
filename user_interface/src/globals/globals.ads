@@ -12,7 +12,7 @@ package Globals is
       Connected      => 1
    );
 
-   Number_Of_Samples : constant Integer := 100;
+   Number_Of_Samples : constant Integer := 500;
 
    type Readings_Buffer is record
       Data  : Uart.Readings_Array (1 .. Number_Of_Samples);
@@ -73,6 +73,11 @@ package Globals is
          Data    : Float
       );
       --  Sets the buffer value at the current index
+
+      procedure Reset_Buffer (
+         Channel : Integer
+      );
+      --  Resets the buffer
 
    private
       --  Arrays storing the raw data used as a buffer

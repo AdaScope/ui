@@ -1,4 +1,4 @@
-with Ada.Text_IO;           use Ada.Text_IO;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body Globals is
 
@@ -41,11 +41,11 @@ package body Globals is
       ) is
       begin
          case Channel is
-            when 1 =>
+            when 1 | 5 =>
                Processed_Data_Channel_1 := Data;
-            when 2 =>
+            when 2 | 6 =>
                Processed_Data_Channel_2 := Data;
-            when 3 =>
+            when 3 | 7 =>
                Processed_Data_Channel_3 := Data;
             when others =>
                Put_Line ("Error Processed_Data.Set_Data");
@@ -63,11 +63,11 @@ package body Globals is
             (1 .. Number_Of_Samples) := (others => 0.0);
       begin
          case Channel is
-            when 1 =>
+            when 1 | 5 =>
                return Processed_Data_Channel_1;
-            when 2 =>
+            when 2 | 6 =>
                return Processed_Data_Channel_2;
-            when 3 =>
+            when 3 | 7 =>
                return Processed_Data_Channel_3;
             when others =>
                Put_Line ("Error Processed_Data.Get_Data");
@@ -85,11 +85,11 @@ package body Globals is
       ) return Float is
       begin
          case Channel is
-            when 1 =>
+            when 1 | 5 =>
                return Processed_Data_Channel_1 (N);
-            when 2 =>
+            when 2 | 6 =>
                return Processed_Data_Channel_2 (N);
-            when 3 =>
+            when 3 | 7 =>
                return Processed_Data_Channel_3 (N);
             when others =>
                Put_Line ("Error Processed_Data.Get_Data_Point");
@@ -107,7 +107,7 @@ package body Globals is
       ) is
       begin
          case Channel is
-            when 1 =>
+            when 1 | 5 =>
                Readings_Buffer_Channel_1.Data
                   (Readings_Buffer_Channel_1.Index) := Data;
                if Readings_Buffer_Channel_1.Index < Number_Of_Samples then
@@ -122,7 +122,7 @@ package body Globals is
                   );
                end if;
 
-            when 2 =>
+            when 2 | 6 =>
                Readings_Buffer_Channel_2.Data
                   (Readings_Buffer_Channel_2.Index) := Data;
                if Readings_Buffer_Channel_2.Index < Number_Of_Samples then
@@ -137,7 +137,7 @@ package body Globals is
                   );
                end if;
 
-            when 3 =>
+            when 3 | 7 =>
                Readings_Buffer_Channel_3.Data
                   (Readings_Buffer_Channel_3.Index) := Data;
                if Readings_Buffer_Channel_3.Index < Number_Of_Samples then
@@ -156,6 +156,23 @@ package body Globals is
                Put_Line ("Wrong channel entered:" & Channel'Image);
          end case;
       end Set_Data;
+
+      procedure Reset_Buffer (
+         Channel : Integer
+      ) is
+      begin
+         case Channel is
+            when 1 | 5 =>
+               Readings_Buffer_Channel_1.Index := 1;
+            when 2 | 6 =>
+               Readings_Buffer_Channel_2.Index := 1;
+            when 3 | 7 =>
+               Readings_Buffer_Channel_3.Index := 1;
+            when others =>
+               Put_Line ("Error Buffered_Data.Reset_Buffer");
+               Put_Line ("Wrong channel entered:" & Channel'Image);
+         end case;
+      end Reset_Buffer;
    end Buffered_Data;
 
 end Globals;
