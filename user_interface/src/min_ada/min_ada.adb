@@ -137,6 +137,7 @@ package body Min_Ada is
             if Frame_Checksum /= Real_Checksum then
                --  Frame fails the checksum and is dropped
                Context.Rx_Frame_State := SEARCHING_FOR_SOF;
+               Put_Line ("Frame dropped!");
             else
                Context.Rx_Frame_State := RECEIVING_EOF;
             end if;

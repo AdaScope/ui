@@ -14,8 +14,8 @@ package body Uart is
       --  Denotes the start and end of the captured data
       --  This will be a subset of the data comming  in
       --  and will be half its size
-      Capture_Start  : Integer := 1;
-      Capture_End    : Integer := Number_Of_Samples / 2;
+      Capture_Start  : Integer;
+      Capture_End    : Integer;
 
       --  To find the center point of the wave
       Data_Min       : Float   := 5000.0; --  Higher than physical max (3000)
@@ -26,6 +26,12 @@ package body Uart is
 
       --  To check if the slope of the wave is positive
       Positive_Slope : Boolean := False;
+
+      --  To check before or after I to see if we are in a positive slope
+      Slope_Offset   : constant Integer := 5;
+
+      --  If all the conditions are met
+      Triggered      : Boolean := False;
    begin
 
       --  Set the trigger point in the center
@@ -44,14 +50,14 @@ package body Uart is
          then
 
             --  Check if positive slope
-            if I + 3 <= Number_Of_Samples then
-               if Data (I) < Data (I + 3) then
+            if I + Slope_Offset <= Number_Of_Samples then
+               if Data (I) < Data (I + Slope_Offset) then
                   Positive_Slope := True;
                else
                   Positive_Slope := False;
                end if;
-            elsif I - 3 >= 1 then
-               if Data (I - 3) < Data (I) then
+            elsif I - Slope_Offset >= 1 then
+               if Data (I - Slope_Offset) < Data (I) then
                   Positive_Slope := True;
                else
                   Positive_Slope := False;
@@ -74,18 +80,22 @@ package body Uart is
                if (Capture_End - Capture_Start) /=
                   (Number_Of_Samples / 2) - 1
                then
-                  Capture_Start := 1;
-                  Capture_End   := Number_Of_Samples / 2;
+                  Triggered     := False;
+               else
+                  Triggered     := True;
                end if;
             end if;
          end if;
       end loop;
 
       --  Save the processed data in the processed data array
-      Globals.Processed_Data.Set_Data (
-         Channel => Channel,
-         Data    => Data (Capture_Start .. Capture_End)
-      );
+      --  only if we were able to trigger
+      if Triggered then
+         Globals.Processed_Data.Set_Data (
+            Channel => Channel,
+            Data    => Data (Capture_Start .. Capture_End)
+         );
+      end if;
    end Process_Data;
 
    task body Read is
