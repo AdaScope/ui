@@ -6,7 +6,7 @@ on:                    # Run the workflow for each of the following event:
     types: [created]   # - A release is created.
 
 jobs:
-  test:
+  compile:
     strategy:
 
       fail-fast: false # Don't stop all the workflows when one of them fails.
@@ -23,7 +23,7 @@ jobs:
         # Install and setup Alire package manager
       - uses: alire-project/setup-alire@v2
 
-      - name: Run your script
+      - name: Run install script
         run: |
           chmod +x install.sh
           ./install.sh
