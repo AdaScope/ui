@@ -6,7 +6,7 @@ on:                    # Run the workflow for each of the following event:
     types: [created]   # - A release is created.
 
 jobs:
-  compile:
+  build:
     strategy:
 
       fail-fast: false # Don't stop all the workflows when one of them fails.
