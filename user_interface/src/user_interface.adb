@@ -22,12 +22,14 @@ with Ada.Unchecked_Conversion;
 with Gtk.Layered;
 with Globals;
 with Worker;
+with Uart;
 
 use type Globals.Board_State;
 
 procedure User_Interface is
    Window            : Gtk_Window;
    Oscilloscope      : Gtk_Oscilloscope;
+   UART_obj          : Uart.Read;
    Writer_Ch_1       : Worker.Process;
    Writer_Ch_2       : Worker.Process;
    Writer_Ch_3       : Worker.Process;
@@ -65,7 +67,7 @@ procedure User_Interface is
 
                   GNAT.Serial_Communications.Set
                      (Port => Globals.Port,
-                     Rate => GNAT.Serial_Communications.B115200);
+                     Rate => GNAT.Serial_Communications.B921600);
                exception
                   when GNAT.Serial_Communications.Serial_Error =>
                      Put_Line ("Serial Error - Board not connected");
@@ -82,6 +84,7 @@ procedure User_Interface is
                if Is_connected then
                   Put_Line ("Changing board state to Connected");
                   Globals.Board_State_Change.Change_State_Connected;
+                  UART_obj.Start;
                end if;
             else
                Put_Line ("Board connected.");
@@ -104,7 +107,7 @@ procedure User_Interface is
       Width : Gdouble;
    begin
       From  := Gdouble (0);   -- X axis start value
-      To    := Gdouble (100); -- X axis end value
+      To    := Gdouble (250); -- X axis end value
       Width := To - From;
 
       --  Set page size of the scope

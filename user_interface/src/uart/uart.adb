@@ -1,169 +1,137 @@
-with Ada.Text_IO; use Ada.Text_IO;
 with GNAT.Serial_Communications;
-with Ada.Float_Text_IO;
-with Ada.IO_Exceptions;
+with Gtk.Main.Router;
 with Ada.Streams;
 with Globals;
+with Min_Ada;
 
 package body Uart is
 
-   function Get_Data (
+   procedure Process_Data (
+      Channel : Integer;
+      Data : Readings_Array;
       Number_Of_Samples : Integer
-   ) return Readings_Array is
-      Readings : Readings_Array (1 .. Number_Of_Samples);
-   begin
-      Readings := Read (Number_Of_Samples => Number_Of_Samples);
-      return Readings;
-   end Get_Data;
+   ) is
+      --  Denotes the start and end of the captured data
+      --  This will be a subset of the data comming  in
+      --  and will be half its size
+      Capture_Start  : Integer;
+      Capture_End    : Integer;
 
-   function Get_Triggered_Data (
-      Data          : Readings_Array;
-      Capture_Start : Integer;
-      Capture_End   : Integer
-   ) return Readings_Array is
-      New_Data      : Readings_Array (Capture_Start .. Capture_End);
-   begin
-      New_Data := Data (Capture_Start .. Capture_End);
-      return New_Data;
-   end Get_Triggered_Data;
+      --  To find the center point of the wave
+      Data_Min       : Float   := 5000.0; --  Higher than physical max (3000)
+      Data_Max       : Float   := 0.0;    --  Lower or equal to max
 
-   function Get_Processed_Data (
-      Number_Of_Samples : Integer
-   ) return Readings_Array is
-      Triggered     : Boolean        := False;
-      Capture_Start : Integer        := 1;
-      Capture_End   : Integer        := Number_Of_Samples / 2;
-      Data          : Readings_Array (1 .. Number_Of_Samples);
-      Data_Min      : Float          := 5000.0;  --  Oscilloscope max is 3000
-      Data_Max      : Float          := 0.0;
-      Trigger_Level : Float;
-   begin
-      Data := Get_Data (Number_Of_Samples);
+      --  The voltage value of the middle of the wave
+      Trigger_Level  : Float;
 
+      --  To check if the slope of the wave is positive
+      Positive_Slope : Boolean := False;
+
+      --  To check before or after I to see if we are in a positive slope
+      Slope_Offset   : constant Integer := 5;
+
+      --  If all the conditions are met
+      Triggered      : Boolean := False;
+   begin
+
+      --  Set the trigger point in the center
       for I in Data'Range loop
          Data_Min := Float'Min (Data_Min, Data (I));
          Data_Max := Float'Max (Data_Max, Data (I));
       end loop;
-
       Trigger_Level := (Data_Min + Data_Max) / 2.0;
 
+      --  Loop over all the data buffer
       for I in Data'Range loop
-         --  Check if can be triggered
-         if Data (I) > Trigger_Level - 100.0 and then
-            Data (I) < Trigger_Level + 100.0 and then
-            not Triggered
+
+         --  Check if data in the trigger range
+         if Data (I) > Trigger_Level - 25.0 and then
+            Data (I) < Trigger_Level + 25.0
          then
-            --  Check for correct slope
-            if I + 3 <= Number_Of_Samples then
-               if Data (I) < Data (I + 3) then
-                  Triggered := True;
-               end if;
-            elsif I - 3 >= 1 then
-               if Data (I - 3) < Data (I) then
-                  Triggered := True;
-               end if;
-            end if;
 
-            if Triggered then
-               --  Find trigger point and collect data before and after
-               Capture_Start :=
-                  Integer'Max (1, I - (Number_Of_Samples / 4));
-               Capture_End   :=
-                  Integer'Min (Data'Last, I + (Number_Of_Samples / 4));
-
-               if Capture_End - Capture_Start /= Number_Of_Samples / 2 then
-                  Capture_Start := 1;
-                  Capture_End   := Number_Of_Samples / 2;
-                  Triggered := False;
+            --  Check if positive slope
+            if I + Slope_Offset <= Number_Of_Samples then
+               if Data (I) < Data (I + Slope_Offset) then
+                  Positive_Slope := True;
+               else
+                  Positive_Slope := False;
+               end if;
+            elsif I - Slope_Offset >= 1 then
+               if Data (I - Slope_Offset) < Data (I) then
+                  Positive_Slope := True;
+               else
+                  Positive_Slope := False;
                end if;
             end if;
 
-            exit when Triggered;
+            --  Check if trigger in correct range
+            --  to be able to take enough data to its left and its right
+            --  (trigger will be in center)
+            if Positive_Slope then
+               if I - (Number_Of_Samples / 4) + 1 >= 1 and then
+                  I + (Number_Of_Samples / 4) <= Number_Of_Samples
+               then
+                  Capture_Start := I - (Number_Of_Samples / 4) + 1;
+                  Capture_End := I + (Number_Of_Samples / 4);
+               end if;
 
+               --  Make sure we have the correct number of samples
+               --  (Should be half of the data buffer)
+               if (Capture_End - Capture_Start) /=
+                  (Number_Of_Samples / 2) - 1
+               then
+                  Triggered     := False;
+               else
+                  Triggered     := True;
+               end if;
+            end if;
          end if;
       end loop;
 
-      declare
-         Triggered_Data : Readings_Array (Capture_Start .. Capture_End - 1);
-      begin
-         Triggered_Data := Get_Triggered_Data (
-            Data => Data,
-            Capture_Start => Capture_Start,
-            Capture_End => Capture_End - 1
+      --  Save the processed data in the processed data array
+      --  only if we were able to trigger
+      if Triggered then
+         Globals.Processed_Data.Set_Data (
+            Channel => Channel,
+            Data    => Data (Capture_Start .. Capture_End)
          );
-         return Triggered_Data;
-      end;
-   end Get_Processed_Data;
+      end if;
+   end Process_Data;
 
-   function Read (
-      Number_Of_Samples : Integer
-   ) return Readings_Array is
+   task body Read is
 
-      --  Initialize the variables for the read
-      Buffer : Ada.Streams.Stream_Element_Array (1 .. 1);
-      Offset : Ada.Streams.Stream_Element_Offset := 1;
+      --  Variables for the serial read
+      Buffer   : Ada.Streams.Stream_Element_Array (1 .. 1);
+      Offset   : Ada.Streams.Stream_Element_Offset := 1;
 
-      --  For storing one reading
-      Line       : String (1 .. 16);
-      Line_Index : Natural := Line'First;
-      Char       : Character;
-
-      --  To count the number of character readings done
-      Counter    : Integer := 1;
-
-      --  For storing all the readings
-      Readings   : Uart.Readings_Array (1 .. Number_Of_Samples);
-
+      --  Context for the min protocol
+      Context  : Min_Ada.Min_Context;
    begin
 
-      --  We initialize the string to eliminate warnings
-      for I in Line'Range loop
-         Line (I) := '0';
-      end loop;
+      select -- Waiting for parameters or exit request
+         accept Start do
 
-      --  Make sure to only start collecting data at start of new line
-      loop
-         GNAT.Serial_Communications.Read (Globals.Port, Buffer, Offset);
-         exit when Character'Val (Buffer (1)) = ASCII.LF;
-      end loop;
+            Min_Ada.Min_Init_Context (Context => Context);
 
-      --  Run until the we gathered the required number of samples
-      while Counter < Number_Of_Samples + 1 loop
-         begin
+            loop
+               --  Read data from serial port
+               GNAT.Serial_Communications.Read (
+                  Port   => Globals.Port,
+                  Buffer => Buffer,
+                  Last   => Offset
+               );
+               --  Send data to protocol for processing
+               Min_Ada.Rx_Bytes (
+                  Context => Context,
+                  Data => Min_Ada.Byte (Buffer (1))
+               );
+            end loop;
+         end Start;
 
-            GNAT.Serial_Communications.Read (Globals.Port, Buffer, Offset);
+      or accept Stop;
+         raise Gtk.Main.Router.Quit_Error;
+      end select;
 
-            --  Store the reading in the Char variable
-            Char := Character'Val (Buffer (1));
-
-            --  If we read the end of the line
-            --  and we are not a the beginning of a line
-            if Char = ASCII.LF and then Line_Index /= 1 then
-
-               --  We save the reading to an array
-               Ada.Float_Text_IO.Get
-                 (From => Line (1 .. Line_Index - 1),
-                  Item => Readings (Counter),
-                  Last => Line_Index);
-
-               --  We reset the line index and increment the counter
-               Line_Index := Line'First;
-               Counter := Counter + 1;
-
-            --  If we are not a the end of the line
-            elsif Char /= ASCII.LF then
-
-               --  We write the current character to
-               --  the current index of our line and increment the line
-               Line (Line_Index) := Char;
-               Line_Index := Line_Index + 1;
-            end if;
-         exception
-            when Ada.IO_Exceptions.Data_Error =>
-               Put_Line ("Data error");
-               Line_Index := Line_Index - 1;
-         end;
-      end loop;
-      return Readings;
+      accept Stop;
    end Read;
 end Uart;

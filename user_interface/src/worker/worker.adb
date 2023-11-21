@@ -6,7 +6,6 @@ with Glib;              use Glib;
 
 with GNAT.Serial_Communications;
 with Globals;
-with Uart;
 
 use type Globals.Board_State;
 
@@ -15,55 +14,51 @@ package body Worker is
    --  Variables for data collection
    X : Integer := 0;
    Y : Float := 0.0;
-   Number_Of_Samples : constant Integer := 100;
-
-   --  Array for storing the data from the board
-   Readings : Uart.Readings_Array (1 .. Number_Of_Samples);
 
    --  Feeding data to oscilloscope
    procedure Feed_UART_Data (
       Scope     : Gtk_Oscilloscope;
-      Channel   : Channel_Number) is
+      Channel   : Channel_Number
+   ) is
    begin
-      --  Get data from UART
-      Readings := Uart.Get_Processed_Data (
-         Number_Of_Samples => Number_Of_Samples * 2
-      );
 
       --  Feed data to the graph
-      for N in 1 .. Number_Of_Samples loop
+      for N in 1 .. Globals.Number_Of_Samples / 2 loop
          X := N;
-         Y := Readings (N);
+         Y := Globals.Processed_Data.Get_Data_Point (
+            Channel => Integer'Val (Channel),
+            N => N
+         );
 
-         Scope.Feed
-               (Channel => Channel,
-                  T     => Gdouble (X),
-                  V     => Gdouble (Y)
-               );
+         Scope.Feed (
+            Channel => Channel,
+            T       => Gdouble (X),
+            V       => Gdouble (Y)
+         );
       end loop;
    end Feed_UART_Data;
 
    --  Managing pause/play
    task body Process is
       Scope      : Gtk_Oscilloscope;
-      Channel1   : Channel_Number;
-      Channel2   : Channel_Number;
-      Channel3   : Channel_Number;
+      Channel_1   : Channel_Number;
+      Channel_2   : Channel_Number;
+      Channel_3   : Channel_Number;
       Last_Time  : Time := Clock;
 
    begin
       select -- Waiting for parameters or exit request
          accept Start (
-            Scope       : Gtk_Oscilloscope;
-            Channel1    : Channel_Number;
-            Channel2    : Channel_Number;
-            Channel3    : Channel_Number
+            Scope     : Gtk_Oscilloscope;
+            Channel_1 : Channel_Number;
+            Channel_2 : Channel_Number;
+            Channel_3 : Channel_Number
          )
          do
             Process.Scope     := Scope;
-            Process.Channel1  := Channel1;
-            Process.Channel2  := Channel2;
-            Process.Channel3  := Channel3;
+            Process.Channel_1 := Channel_1;
+            Process.Channel_2 := Channel_2;
+            Process.Channel_3 := Channel_3;
             Put_Line ("Start process");
          end Start;
 
@@ -88,9 +83,9 @@ package body Worker is
                if Globals.Board_State_Change.Get_Board_State =
                   Globals.Connected
                then
-                  Feed_UART_Data (Scope, Channel1);
-                  Feed_UART_Data (Scope, Channel2);
-                  Feed_UART_Data (Scope, Channel3);
+                  Feed_UART_Data (Scope, Channel_1);
+                  Feed_UART_Data (Scope, Channel_2);
+                  Feed_UART_Data (Scope, Channel_3);
                end if;
             end select;
          end if;

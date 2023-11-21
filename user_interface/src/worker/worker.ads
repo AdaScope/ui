@@ -13,10 +13,10 @@ package Worker is
    --
       entry Start
             (
-               Scope    : Gtk_Oscilloscope;
-               Channel1  : Channel_Number;
-               Channel2  : Channel_Number;
-               Channel3  : Channel_Number
+               Scope     : Gtk_Oscilloscope;
+               Channel_1 : Channel_Number;
+               Channel_2 : Channel_Number;
+               Channel_3 : Channel_Number
             );
    --
    --  Stop -- Terminate the task prematurely
