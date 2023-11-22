@@ -12,6 +12,7 @@ package Globals is
       Connected      => 1
    );
 
+   --  Must be divisible by 4 for triggering
    Number_Of_Samples : constant Integer := 500;
 
    type Readings_Buffer is record

@@ -24,13 +24,7 @@ package body Uart is
       --  The voltage value of the middle of the wave
       Trigger_Level  : Float;
 
-      --  To check if the slope of the wave is positive
-      Positive_Slope : Boolean := False;
-
-      --  To check before or after I to see if we are in a positive slope
-      Slope_Offset   : constant Integer := 5;
-
-      --  If all the conditions are met
+      --  If all the trigger conditions are met
       Triggered      : Boolean := False;
    begin
 
@@ -41,49 +35,27 @@ package body Uart is
       end loop;
       Trigger_Level := (Data_Min + Data_Max) / 2.0;
 
-      --  Loop over all the data buffer
-      for I in Data'Range loop
+      --  Loop over all the valid data buffer
+      for I in (Number_Of_Samples / 4) + 1 ..
+         Number_Of_Samples - (Number_Of_Samples / 4) loop
 
          --  Check if data in the trigger range
-         if Data (I) > Trigger_Level - 25.0 and then
-            Data (I) < Trigger_Level + 25.0
+         if Data (I + 1) > Trigger_Level and then
+            Data (I) <= Trigger_Level
          then
-
-            --  Check if positive slope
-            if I + Slope_Offset <= Number_Of_Samples then
-               if Data (I) < Data (I + Slope_Offset) then
-                  Positive_Slope := True;
-               else
-                  Positive_Slope := False;
-               end if;
-            elsif I - Slope_Offset >= 1 then
-               if Data (I - Slope_Offset) < Data (I) then
-                  Positive_Slope := True;
-               else
-                  Positive_Slope := False;
-               end if;
-            end if;
-
-            --  Check if trigger in correct range
-            --  to be able to take enough data to its left and its right
+            --  Take data before and after trigger point
             --  (trigger will be in center)
-            if Positive_Slope then
-               if I - (Number_Of_Samples / 4) + 1 >= 1 and then
-                  I + (Number_Of_Samples / 4) <= Number_Of_Samples
-               then
-                  Capture_Start := I - (Number_Of_Samples / 4) + 1;
-                  Capture_End := I + (Number_Of_Samples / 4);
-               end if;
+            Capture_Start := I - (Number_Of_Samples / 4) + 1;
+            Capture_End := I + (Number_Of_Samples / 4);
 
-               --  Make sure we have the correct number of samples
-               --  (Should be half of the data buffer)
-               if (Capture_End - Capture_Start) /=
-                  (Number_Of_Samples / 2) - 1
-               then
-                  Triggered     := False;
-               else
-                  Triggered     := True;
-               end if;
+            --  Make sure we have the correct number of samples
+            --  (Should be half of the data buffer)
+            if (Capture_End - Capture_Start) /=
+               (Number_Of_Samples / 2) - 1
+            then
+               Triggered     := False;
+            else
+               Triggered     := True;
             end if;
          end if;
       end loop;
