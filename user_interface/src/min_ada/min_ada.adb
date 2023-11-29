@@ -226,9 +226,9 @@ package body Min_Ada is
       Payload        : Min_Payload;
       Payload_Length : Byte
    ) is
-      Full_Reading_Array : Uart.Full_Reading;
+      Reading_Array : Uart.Reading_From_Bytes;
       Current_Reading    : Uart.Reading with Address =>
-         Uart.Full_Reading'Address;
+         Reading_Array'Address;
    begin
 
       --  Check if fist frame to reset the buffers (this makes sure the
@@ -242,9 +242,9 @@ package body Min_Ada is
       --  Loop over all the data in the payload
       for I in 1 .. Integer'Val (Payload_Length) loop
          if I mod 2 /= 0 then
-            Full_Reading_Array (1) := Payload (I);
+            Reading_Array (1) := Payload (Min_Ada.Byte (I));
          else
-            Full_Reading_Array (2) := Payload (I);
+            Reading_Array (2) := Payload (Min_Ada.Byte (I));
             --  Save the current number in the data buffer
             Globals.Buffered_Data.Set_Data (
                Channel => Integer'Value (ID'Image),
