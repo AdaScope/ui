@@ -1,6 +1,7 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with Interfaces; use Interfaces;
 with Globals;
+with Uart;
 
 package body Min_Ada is
 
@@ -225,6 +226,9 @@ package body Min_Ada is
       Payload        : Min_Payload;
       Payload_Length : Byte
    ) is
+      Full_Reading_Array : Uart.Full_Reading;
+      Current_Reading    : Uart.Reading with Address =>
+         Uart.Full_Reading'Address;
    begin
 
       --  Check if fist frame to reset the buffers (this makes sure the
@@ -237,12 +241,16 @@ package body Min_Ada is
 
       --  Loop over all the data in the payload
       for I in 1 .. Integer'Val (Payload_Length) loop
-
-         --  Save the current number in the data buffer
-         Globals.Buffered_Data.Set_Data (
-            Channel => Integer'Value (ID'Image),
-            Data => Float (Payload (Min_Ada.Byte (I)))
-         );
+         if I mod 2 /= 0 then
+            Full_Reading_Array (1) := Payload (I);
+         else
+            Full_Reading_Array (2) := Payload (I);
+            --  Save the current number in the data buffer
+            Globals.Buffered_Data.Set_Data (
+               Channel => Integer'Value (ID'Image),
+               Data => Float (Current_Reading)
+            );
+         end if;
       end loop;
    end Min_Application_Handler;
 

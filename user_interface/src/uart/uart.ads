@@ -1,3 +1,4 @@
+with Min_Ada;
 package Uart is
 
    --  Type for the values returned by Read function
@@ -6,6 +7,8 @@ package Uart is
    --  Type for I don't know
    D : constant := 0.1;
    type Reading is delta D range 0.0 .. 3000.0;
+   
+   type Full_Reading is array (1 .. 2) of Min_Ada.Byte;
 
    --  Implements triggering to keep the data (mostly) still
    procedure Process_Data (
