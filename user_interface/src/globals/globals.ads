@@ -3,7 +3,8 @@ with Uart;
 
 package Globals is
 
-   Port : GNAT.Serial_Communications.Serial_Port; --  The port to connect to
+   --  The port to connect to
+   Port : GNAT.Serial_Communications.Serial_Port;
 
    type Board_State is (Disconnected, Connected);
 
@@ -12,8 +13,9 @@ package Globals is
       Connected      => 1
    );
 
-   --  Must be divisible by 4 for triggering
+   --  Number of sample data points to collect
    Number_Of_Samples : constant Integer := 500;
+   --  Must be divisible by 4 for triggering
 
    type Readings_Buffer is record
       Data  : Uart.Readings_Array (1 .. Number_Of_Samples);
@@ -22,14 +24,14 @@ package Globals is
 
    protected Board_State_Change is
 
-      procedure Change_State_Connected;
       --  Changes the state of the board to Connected
+      procedure Change_State_Connected;
 
-      procedure Change_State_Disconnected;
       --  Changes the state of the board to Disconnected
+      procedure Change_State_Disconnected;
 
-      function Get_Board_State return Board_State;
       --  Gets current board state
+      function Get_Board_State return Board_State;
 
    private
       Current_Board_State : Board_State := Disconnected;
@@ -37,22 +39,22 @@ package Globals is
 
    protected Processed_Data is
 
+      --  Sets the data array
       procedure Set_Data (
          Channel : Integer;
          Data    : Uart.Readings_Array
       );
-      --  Sets the data array
 
+      --  Gets the data array
       function Get_Data (
          Channel : Integer
       ) return Uart.Readings_Array;
-      --  Gets the data array
 
+      --  Gets the data array
       function Get_Data_Point (
          Channel : Integer;
          N       : Integer
       ) return Float;
-      --  Gets the data array
 
    private
       --  Arrays storing the processed data
@@ -69,16 +71,16 @@ package Globals is
 
    protected Buffered_Data is
 
+      --  Sets the buffer value at the current index
       procedure Set_Data (
          Channel : Integer;
          Data    : Float
       );
-      --  Sets the buffer value at the current index
 
+      --  Resets the buffer
       procedure Reset_Buffer (
          Channel : Integer
       );
-      --  Resets the buffer
 
    private
       --  Arrays storing the raw data used as a buffer

@@ -4,25 +4,25 @@ package body Globals is
 
    protected body Board_State_Change is
 
-      ----------------------------
-      -- Change_State_Connected --
-      ----------------------------
+      -------------------------------------
+      -- Change board state to Connected --
+      -------------------------------------
       procedure Change_State_Connected is
       begin
          Current_Board_State := Connected;
       end Change_State_Connected;
 
-      -------------------------------
-      -- Change_State_Disconnected --
-      -------------------------------
+      ----------------------------------------
+      -- Change board state to Disconnected --
+      ----------------------------------------
       procedure Change_State_Disconnected is
       begin
          Current_Board_State := Disconnected;
       end Change_State_Disconnected;
 
-      ---------------------
-      -- Get_Board_State --
-      ---------------------
+      ---------------------------------
+      -- Returns current board state --
+      ---------------------------------
       function Get_Board_State return Board_State is
       begin
          return Current_Board_State;
@@ -32,9 +32,9 @@ package body Globals is
 
    protected body Processed_Data is
 
-      ---------------------
-      -- Set_Data_Array --
-      ---------------------
+      ------------------------------------------------
+      -- Sets processed data for specified channel  --
+      ------------------------------------------------
       procedure Set_Data (
          Channel : Integer;
          Data    : Uart.Readings_Array
@@ -53,9 +53,9 @@ package body Globals is
          end case;
       end Set_Data;
 
-      ---------------------
-      -- Get_Data_Array --
-      ---------------------
+      ------------------------------------------------
+      -- Gets processed data for specified channel  --
+      ------------------------------------------------
       function Get_Data (
          Channel : Integer
       ) return Uart.Readings_Array is
@@ -76,9 +76,9 @@ package body Globals is
          end case;
       end Get_Data;
 
-      ---------------------
-      -- Get_Data_Point --
-      ---------------------
+      -----------------------------------------------------
+      -- Gets data point for specified channel and index --
+      -----------------------------------------------------
       function Get_Data_Point (
          Channel : Integer;
          N : Integer
@@ -101,6 +101,9 @@ package body Globals is
 
    protected body Buffered_Data is
 
+      -------------------------------------------------
+      -- Sets unprocessed data for specified channel --
+      -------------------------------------------------
       procedure Set_Data (
          Channel : Integer;
          Data    : Float
@@ -110,6 +113,7 @@ package body Globals is
             when 1 | 5 =>
                Readings_Buffer_Channel_1.Data
                   (Readings_Buffer_Channel_1.Index) := Data;
+
                if Readings_Buffer_Channel_1.Index < Number_Of_Samples then
                   Readings_Buffer_Channel_1.Index :=
                      Readings_Buffer_Channel_1.Index + 1;
@@ -125,6 +129,7 @@ package body Globals is
             when 2 | 6 =>
                Readings_Buffer_Channel_2.Data
                   (Readings_Buffer_Channel_2.Index) := Data;
+
                if Readings_Buffer_Channel_2.Index < Number_Of_Samples then
                   Readings_Buffer_Channel_2.Index :=
                      Readings_Buffer_Channel_2.Index + 1;
@@ -140,6 +145,7 @@ package body Globals is
             when 3 | 7 =>
                Readings_Buffer_Channel_3.Data
                   (Readings_Buffer_Channel_3.Index) := Data;
+
                if Readings_Buffer_Channel_3.Index < Number_Of_Samples then
                   Readings_Buffer_Channel_3.Index :=
                      Readings_Buffer_Channel_3.Index + 1;
@@ -151,12 +157,16 @@ package body Globals is
                      Number_Of_Samples => Number_Of_Samples
                   );
                end if;
+
             when others =>
                Put_Line ("Error Buffered_Data.Set_Data");
                Put_Line ("Wrong channel entered:" & Channel'Image);
          end case;
       end Set_Data;
 
+      ---------------------------------------------------
+      -- Resets unprocessed data for specified channel --
+      ---------------------------------------------------
       procedure Reset_Buffer (
          Channel : Integer
       ) is
