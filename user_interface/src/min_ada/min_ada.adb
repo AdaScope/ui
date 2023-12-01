@@ -1,3 +1,4 @@
+with Ada.Characters.Handling;
 with Ada.Text_IO; use Ada.Text_IO;
 with Interfaces; use Interfaces;
 with Globals;
@@ -268,7 +269,7 @@ package body Min_Ada is
             Reading_Index := 1;
 
          --  If we do not read a line ending
-         elsif Current_Digit /= ASCII.LF then
+         elsif Ada.Characters.Handling.Is_Digit (Current_Digit) then
             --  Reading not full (we don't have 4 digits in our reading yet)
             if Reading_Index <= 4 then
 
