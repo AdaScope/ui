@@ -183,6 +183,119 @@ package body Globals is
                Put_Line ("Wrong channel entered:" & Channel'Image);
          end case;
       end Reset_Buffer;
+
+      procedure Process_Data (
+         Channel : Integer
+      ) is
+      --  Denotes the start and end of the captured data
+      --  This will be a subset of the data comming  in
+      --  and will be half its size
+      Capture_Start  : Integer;
+      Capture_End    : Integer;
+
+      --  To find the center point of the wave
+      Data_Min       : Float   := 5000.0; --  Higher than physical max (3000)
+      Data_Max       : Float   := 0.0;    --  Lower or equal to max
+      
+      --  The voltage value of the middle of the wave
+      Trigger_Level  : Float;
+
+      --  If all the trigger conditions are met
+      Triggered      : Boolean := False;
+      begin
+
+         --  Set the trigger point in the center
+         for I in 1 .. Number_Of_Samples loop
+            case Channel is
+               when 1 | 5 =>
+                  Data_Min := Float'Min (Data_Min, Readings_Buffer_Channel_1.Data (I));
+                  Data_Max := Float'Max (Data_Max, Readings_Buffer_Channel_1.Data (I));
+               when 2 | 6 =>
+                  Data_Min := Float'Min (Data_Min, Readings_Buffer_Channel_2.Data (I));
+                  Data_Max := Float'Max (Data_Max, Readings_Buffer_Channel_2.Data (I));
+               when 3 | 7 =>
+                  Data_Min := Float'Min (Data_Min, Readings_Buffer_Channel_3.Data (I));
+                  Data_Max := Float'Max (Data_Max, Readings_Buffer_Channel_3.Data (I));
+               when others =>
+                  Put_Line ("Error Buffered_Data.Processed_Data");
+                  Put_Line ("Wrong channel entered:" & Channel'Image);
+            end case;
+
+         end loop;
+         Trigger_Level := (Data_Min + Data_Max) / 2.0;
+
+         --  Loop over all the valid data buffer
+         for I in (Number_Of_Samples / 4) + 1 ..
+            Number_Of_Samples - (Number_Of_Samples / 4) loop
+
+            --  Check if data in the trigger range
+            case Channel is
+               when 1 | 5 =>
+                  if Readings_Buffer_Channel_1.Data (I + 1) > Trigger_Level and then
+                     Readings_Buffer_Channel_1.Data (I) <= Trigger_Level
+                  then
+                     Triggered := True;
+                  end if;
+               when 2 | 6 =>
+                  if Readings_Buffer_Channel_2.Data (I + 1) > Trigger_Level and then
+                     Readings_Buffer_Channel_2.Data (I) <= Trigger_Level
+                  then
+                     Triggered := True;
+                  end if;
+               when 3 | 7 =>
+                  if Readings_Buffer_Channel_3.Data (I + 1) > Trigger_Level and then
+                     Readings_Buffer_Channel_3.Data (I) <= Trigger_Level
+                  then
+                     Triggered := True;
+                  end if;
+               when others =>
+                  Put_Line ("Error Buffered_Data.Processed_Data");
+                  Put_Line ("Wrong channel entered:" & Channel'Image);
+            end case;
+            if Triggered then
+               --  Take data before and after trigger point
+               --  (trigger will be in center)
+               Capture_Start := I - (Number_Of_Samples / 4) + 1;
+               Capture_End := I + (Number_Of_Samples / 4);
+
+               --  Make sure we have the correct number of samples
+               --  (Should be half of the data buffer)
+               if (Capture_End - Capture_Start) /=
+                  (Number_Of_Samples / 2) - 1
+               then
+                  Triggered     := False;
+               else
+                  Triggered     := True;
+               end if;
+            end if;
+         end loop;
+
+         --  Save the processed data in the processed data array
+         --  only if we were able to trigger
+         if Triggered then
+            case Channel is
+               when 1 | 5 =>
+                  Globals.Processed_Data.Set_Data (
+                     Channel => Channel,
+                     Data    => Readings_Buffer_Channel_1.Data (Capture_Start .. Capture_End)
+                  );
+               when 2 | 6 =>
+                  Globals.Processed_Data.Set_Data (
+                     Channel => Channel,
+                     Data    => Readings_Buffer_Channel_2.Data (Capture_Start .. Capture_End)
+                  );
+               when 3 | 7 =>
+                  Globals.Processed_Data.Set_Data (
+                     Channel => Channel,
+                     Data    => Readings_Buffer_Channel_3.Data (Capture_Start .. Capture_End)
+                  );
+               when others =>
+                  Put_Line ("Error Buffered_Data.Processed_Data");
+                  Put_Line ("Wrong channel entered:" & Channel'Image);
+            end case;
+         end if;
+      end Process_Data;
+
    end Buffered_Data;
 
 end Globals;

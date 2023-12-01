@@ -82,6 +82,11 @@ package Globals is
          Channel : Integer
       );
 
+      --  Does all the triggering
+      procedure Processed_Data (
+         Channel : Integer
+      );
+
    private
       --  Arrays storing the raw data used as a buffer
       Readings_Buffer_Channel_1 : Readings_Buffer;
