@@ -119,10 +119,8 @@ package body Globals is
                      Readings_Buffer_Channel_1.Index + 1;
                else
                   Readings_Buffer_Channel_1.Index := 1;
-                  Uart.Process_Data (
-                     Channel           => 1,
-                     Data              => Readings_Buffer_Channel_1.Data,
-                     Number_Of_Samples => Number_Of_Samples
+                  Process_Data (
+                     Channel => 1
                   );
                end if;
 
@@ -135,10 +133,8 @@ package body Globals is
                      Readings_Buffer_Channel_2.Index + 1;
                else
                   Readings_Buffer_Channel_2.Index := 1;
-                  Uart.Process_Data (
-                     Channel           => 2,
-                     Data              => Readings_Buffer_Channel_2.Data,
-                     Number_Of_Samples => Number_Of_Samples
+                  Process_Data (
+                     Channel => 2
                   );
                end if;
 
@@ -151,10 +147,8 @@ package body Globals is
                      Readings_Buffer_Channel_3.Index + 1;
                else
                   Readings_Buffer_Channel_3.Index := 1;
-                  Uart.Process_Data (
-                     Channel           => 3,
-                     Data              => Readings_Buffer_Channel_3.Data,
-                     Number_Of_Samples => Number_Of_Samples
+                  Process_Data (
+                     Channel => 3
                   );
                end if;
 
@@ -187,35 +181,41 @@ package body Globals is
       procedure Process_Data (
          Channel : Integer
       ) is
-      --  Denotes the start and end of the captured data
-      --  This will be a subset of the data comming  in
-      --  and will be half its size
-      Capture_Start  : Integer;
-      Capture_End    : Integer;
+         --  Denotes the start and end of the captured data
+         --  This will be a subset of the data comming  in
+         --  and will be half its size
+         Capture_Start  : Integer;
+         Capture_End    : Integer;
 
-      --  To find the center point of the wave
-      Data_Min       : Float   := 5000.0; --  Higher than physical max (3000)
-      Data_Max       : Float   := 0.0;    --  Lower or equal to max
-      
-      --  The voltage value of the middle of the wave
-      Trigger_Level  : Float;
+         --  To find the center point of the wave
+         Data_Min       : Float   := 5000.0; --  Higher than max (3000)
+         Data_Max       : Float   := 0.0;    --  Lower or equal to max
 
-      --  If all the trigger conditions are met
-      Triggered      : Boolean := False;
+         --  The voltage value of the middle of the wave
+         Trigger_Level  : Float;
+
+         --  If all the trigger conditions are met
+         Triggered      : Boolean := False;
       begin
 
          --  Set the trigger point in the center
          for I in 1 .. Number_Of_Samples loop
             case Channel is
                when 1 | 5 =>
-                  Data_Min := Float'Min (Data_Min, Readings_Buffer_Channel_1.Data (I));
-                  Data_Max := Float'Max (Data_Max, Readings_Buffer_Channel_1.Data (I));
+                  Data_Min := Float'Min
+                     (Data_Min, Readings_Buffer_Channel_1.Data (I));
+                  Data_Max := Float'Max
+                     (Data_Max, Readings_Buffer_Channel_1.Data (I));
                when 2 | 6 =>
-                  Data_Min := Float'Min (Data_Min, Readings_Buffer_Channel_2.Data (I));
-                  Data_Max := Float'Max (Data_Max, Readings_Buffer_Channel_2.Data (I));
+                  Data_Min := Float'Min
+                     (Data_Min, Readings_Buffer_Channel_2.Data (I));
+                  Data_Max := Float'Max
+                     (Data_Max, Readings_Buffer_Channel_2.Data (I));
                when 3 | 7 =>
-                  Data_Min := Float'Min (Data_Min, Readings_Buffer_Channel_3.Data (I));
-                  Data_Max := Float'Max (Data_Max, Readings_Buffer_Channel_3.Data (I));
+                  Data_Min := Float'Min
+                     (Data_Min, Readings_Buffer_Channel_3.Data (I));
+                  Data_Max := Float'Max
+                     (Data_Max, Readings_Buffer_Channel_3.Data (I));
                when others =>
                   Put_Line ("Error Buffered_Data.Processed_Data");
                   Put_Line ("Wrong channel entered:" & Channel'Image);
@@ -231,19 +231,22 @@ package body Globals is
             --  Check if data in the trigger range
             case Channel is
                when 1 | 5 =>
-                  if Readings_Buffer_Channel_1.Data (I + 1) > Trigger_Level and then
+                  if Readings_Buffer_Channel_1.Data
+                        (I + 1) > Trigger_Level and then
                      Readings_Buffer_Channel_1.Data (I) <= Trigger_Level
                   then
                      Triggered := True;
                   end if;
                when 2 | 6 =>
-                  if Readings_Buffer_Channel_2.Data (I + 1) > Trigger_Level and then
+                  if Readings_Buffer_Channel_2.Data
+                        (I + 1) > Trigger_Level and then
                      Readings_Buffer_Channel_2.Data (I) <= Trigger_Level
                   then
                      Triggered := True;
                   end if;
                when 3 | 7 =>
-                  if Readings_Buffer_Channel_3.Data (I + 1) > Trigger_Level and then
+                  if Readings_Buffer_Channel_3.Data
+                        (I + 1) > Trigger_Level and then
                      Readings_Buffer_Channel_3.Data (I) <= Trigger_Level
                   then
                      Triggered := True;
@@ -277,17 +280,20 @@ package body Globals is
                when 1 | 5 =>
                   Globals.Processed_Data.Set_Data (
                      Channel => Channel,
-                     Data    => Readings_Buffer_Channel_1.Data (Capture_Start .. Capture_End)
+                     Data    => Readings_Buffer_Channel_1.Data
+                        (Capture_Start .. Capture_End)
                   );
                when 2 | 6 =>
                   Globals.Processed_Data.Set_Data (
                      Channel => Channel,
-                     Data    => Readings_Buffer_Channel_2.Data (Capture_Start .. Capture_End)
+                     Data    => Readings_Buffer_Channel_2.Data
+                        (Capture_Start .. Capture_End)
                   );
                when 3 | 7 =>
                   Globals.Processed_Data.Set_Data (
                      Channel => Channel,
-                     Data    => Readings_Buffer_Channel_3.Data (Capture_Start .. Capture_End)
+                     Data    => Readings_Buffer_Channel_3.Data
+                        (Capture_Start .. Capture_End)
                   );
                when others =>
                   Put_Line ("Error Buffered_Data.Processed_Data");

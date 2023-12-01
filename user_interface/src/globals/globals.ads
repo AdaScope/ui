@@ -83,7 +83,7 @@ package Globals is
       );
 
       --  Does all the triggering
-      procedure Processed_Data (
+      procedure Process_Data (
          Channel : Integer
       );
 
