@@ -242,9 +242,9 @@ package body Min_Ada is
       --  Loop over all the data in the payload
       for I in 1 .. Integer'Val (Payload_Length) loop
          if I mod 2 /= 0 then
-            Reading_Array (1) := Payload (Min_Ada.Byte (I));
-         else
             Reading_Array (2) := Payload (Min_Ada.Byte (I));
+         else
+            Reading_Array (1) := Payload (Min_Ada.Byte (I));
             --  Save the current number in the data buffer
             Globals.Buffered_Data.Set_Data (
                Channel => Integer'Value (ID'Image),

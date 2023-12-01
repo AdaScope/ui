@@ -12,7 +12,7 @@ package Globals is
       Connected      => 1
    );
 
-   Number_Of_Samples : constant Integer := 500;
+   Number_Of_Samples : constant Integer := 1200;
 
    type Readings_Buffer is record
       Data  : Uart.Readings_Array (1 .. Number_Of_Samples);
