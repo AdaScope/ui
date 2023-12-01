@@ -9,3 +9,5 @@ maintainers-logins = ["4nn3-50ph13"]
 executables = ["user_interface"]
 [[depends-on]]
 gtkada = "^23.0.0"
+[[depends-on]]
+aunit = "^23.0.0"

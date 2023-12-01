@@ -5,11 +5,12 @@ project User_Interface is
                         "src/globals",
                         "src/uart",
                         "src/worker",
-                        "config/");
+                        "config/",
+                        "tests/");
    for Object_Dir use "obj/" & User_Interface_Config.Build_Profile;
    for Create_Missing_Dirs use "True";
    for Exec_Dir use "bin";
-   for Main use ("user_interface.adb");
+   for Main use ("run_tests.adb");
 
    package Compiler is
       for Default_Switches ("Ada") use User_Interface_Config.Ada_Compiler_Switches;

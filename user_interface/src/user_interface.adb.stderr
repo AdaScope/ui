@@ -1,0 +1,15 @@
+user_interface.adb:1:06: error: file "gtk.ads" not found
+user_interface.adb:2:06: error: file "gtk.ads" not found
+user_interface.adb:6:06: error: file "gtk.ads" not found
+user_interface.adb:7:06: error: file "gtk.ads" not found
+user_interface.adb:8:06: error: file "gtk.ads" not found
+user_interface.adb:9:06: error: file "gdk.ads" not found
+user_interface.adb:10:06: error: file "gtk.ads" not found
+user_interface.adb:11:06: error: file "gtk.ads" not found
+user_interface.adb:12:06: error: file "gtk.ads" not found
+user_interface.adb:13:06: error: file "gtk.ads" not found
+user_interface.adb:14:06: error: file "glib.ads" not found
+user_interface.adb:16:06: error: file "gtk.ads" not found
+user_interface.adb:19:06: error: file "gtk.ads" not found
+user_interface.adb:20:06: error: file "globals.ads" not found
+user_interface.adb:21:06: error: file "worker.ads" not found
