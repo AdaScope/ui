@@ -12,13 +12,6 @@ package Uart is
    --  Type to build a Reading from two Bytes
    type Reading_From_Bytes is array (1 .. 2) of Min_Ada.Byte;
 
-   --  Implements triggering to keep the data (mostly) still
-   procedure Process_Data (
-      Channel           : Integer;
-      Data              : Readings_Array;
-      Number_Of_Samples : Integer
-   );
-
    task type Read is
       entry Start;
       entry Stop;
