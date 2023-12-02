@@ -27,3 +27,7 @@ jobs:
         run: |
           chmod +x install.sh
           ./install.sh
+
+      - name: Build the user interface
+        run: |
+          alr build
