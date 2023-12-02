@@ -107,7 +107,7 @@ procedure User_Interface is
       Width : Gdouble;
    begin
       From  := Gdouble (0);   -- X axis start value
-      To    := Gdouble (250); -- X axis end value
+      To    := Gdouble (600); -- X axis end value
       Width := To - From;
 
       --  Set page size of the scope

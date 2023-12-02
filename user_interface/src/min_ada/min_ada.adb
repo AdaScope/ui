@@ -2,6 +2,7 @@ with Ada.Characters.Handling;
 with Ada.Text_IO; use Ada.Text_IO;
 with Interfaces; use Interfaces;
 with Globals;
+with Uart;
 
 package body Min_Ada is
 
@@ -226,14 +227,9 @@ package body Min_Ada is
       Payload        : Min_Payload;
       Payload_Length : Byte
    ) is
-      --  To store one reading (one number)
-      Reading        : String (1 .. 4) := "0000";
-
-      --  To keep track of the index in the reading
-      Reading_Index  : Integer := 1;
-
-      --  Current digit received in the payload
-      Current_Digit  : Character;
+      Reading_Array : Uart.Reading_From_Bytes;
+      Current_Reading    : Uart.Reading with Address =>
+         Reading_Array'Address;
    begin
 
       --  Check if fist frame to reset the buffers (this makes sure the
@@ -246,40 +242,15 @@ package body Min_Ada is
 
       --  Loop over all the data in the payload
       for I in 1 .. Integer'Val (Payload_Length) loop
-
-         --  Transform the payload byte in a character
-         Current_Digit := Character'Val (Payload (Byte (I)));
-
-         --  Make sure Reading_Index in bounds
-         if Reading_Index > 5 then
-            Reading_Index  := 1;
-         end if;
-
-         --  If we read a line ending
-         --  And reading is not empty
-         if Current_Digit = ASCII.LF and then
-            Reading_Index > 1
-         then
+         if I mod 2 /= 0 then
+            Reading_Array (2) := Payload (Min_Ada.Byte (I));
+         else
+            Reading_Array (1) := Payload (Min_Ada.Byte (I));
             --  Save the current number in the data buffer
             Globals.Buffered_Data.Set_Data (
                Channel => Integer'Value (ID'Image),
-               Data => Float'Value (Reading (1 .. Reading_Index - 1))
+               Data => Float (Current_Reading)
             );
-            --  Reset the reading index
-            Reading_Index := 1;
-
-         --  If we do not read a line ending
-         elsif Ada.Characters.Handling.Is_Digit (Current_Digit) then
-            --  Reading not full (we don't have 4 digits in our reading yet)
-            if Reading_Index <= 4 then
-
-               --  We save the current digit to
-               --  the current index of our reading and increment the index
-               Reading (Reading_Index) := Current_Digit;
-            end if;
-
-            --  Increment the reading index (even if index > 4)
-            Reading_Index := Reading_Index + 1;
          end if;
       end loop;
    end Min_Application_Handler;

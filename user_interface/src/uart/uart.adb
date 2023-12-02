@@ -2,7 +2,6 @@ with GNAT.Serial_Communications;
 with Gtk.Main.Router;
 with Ada.Streams;
 with Globals;
-with Min_Ada;
 
 package body Uart is
 

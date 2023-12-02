@@ -14,8 +14,8 @@ package Globals is
    );
 
    --  Number of sample data points to collect
-   Number_Of_Samples : constant Integer := 500;
    --  Must be divisible by 4 for triggering
+   Number_Of_Samples : constant Integer := 1200;
 
    type Readings_Buffer is record
       Data  : Uart.Readings_Array (1 .. Number_Of_Samples);
