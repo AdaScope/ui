@@ -84,7 +84,8 @@ package Globals is
 
       --  Does all the triggering
       procedure Process_Data (
-         Channel : Integer
+         Channel : Integer;
+         Buffer  : Uart.Readings_Array
       );
 
    private

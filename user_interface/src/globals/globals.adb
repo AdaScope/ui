@@ -1,4 +1,5 @@
 with Ada.Text_IO; use Ada.Text_IO;
+with Uart;
 
 package body Globals is
 
@@ -120,7 +121,8 @@ package body Globals is
                else
                   Readings_Buffer_Channel_1.Index := 1;
                   Process_Data (
-                     Channel => 1
+                     Channel => 1,
+                     Readings_Buffer_Channel_1.Data
                   );
                end if;
 
@@ -134,7 +136,8 @@ package body Globals is
                else
                   Readings_Buffer_Channel_2.Index := 1;
                   Process_Data (
-                     Channel => 2
+                     Channel => 2,
+                     Readings_Buffer_Channel_2.Data
                   );
                end if;
 
@@ -148,7 +151,8 @@ package body Globals is
                else
                   Readings_Buffer_Channel_3.Index := 1;
                   Process_Data (
-                     Channel => 3
+                     Channel => 3,
+                     Readings_Buffer_Channel_3.Data
                   );
                end if;
 
@@ -179,7 +183,8 @@ package body Globals is
       end Reset_Buffer;
 
       procedure Process_Data (
-         Channel : Integer
+         Channel : Integer;
+         Buffer  : Uart.Readings_Array
       ) is
          --  Denotes the start and end of the captured data
          --  This will be a subset of the data comming  in
@@ -200,27 +205,8 @@ package body Globals is
 
          --  Set the trigger point in the center
          for I in 1 .. Number_Of_Samples loop
-            case Channel is
-               when 1 | 5 =>
-                  Data_Min := Float'Min
-                     (Data_Min, Readings_Buffer_Channel_1.Data (I));
-                  Data_Max := Float'Max
-                     (Data_Max, Readings_Buffer_Channel_1.Data (I));
-               when 2 | 6 =>
-                  Data_Min := Float'Min
-                     (Data_Min, Readings_Buffer_Channel_2.Data (I));
-                  Data_Max := Float'Max
-                     (Data_Max, Readings_Buffer_Channel_2.Data (I));
-               when 3 | 7 =>
-                  Data_Min := Float'Min
-                     (Data_Min, Readings_Buffer_Channel_3.Data (I));
-                  Data_Max := Float'Max
-                     (Data_Max, Readings_Buffer_Channel_3.Data (I));
-               when others =>
-                  Put_Line ("Error Buffered_Data.Processed_Data");
-                  Put_Line ("Wrong channel entered:" & Channel'Image);
-            end case;
-
+            Data_Min := Float'Min (Data_Min, Buffer.Data (I));
+            Data_Max := Float'Max (Data_Max, Buffer.Data (I));
          end loop;
          Trigger_Level := (Data_Min + Data_Max) / 2.0;
 
@@ -229,33 +215,9 @@ package body Globals is
             Number_Of_Samples - (Number_Of_Samples / 4) loop
 
             --  Check if data in the trigger range
-            case Channel is
-               when 1 | 5 =>
-                  if Readings_Buffer_Channel_1.Data
-                        (I + 1) > Trigger_Level and then
-                     Readings_Buffer_Channel_1.Data (I) <= Trigger_Level
-                  then
-                     Triggered := True;
-                  end if;
-               when 2 | 6 =>
-                  if Readings_Buffer_Channel_2.Data
-                        (I + 1) > Trigger_Level and then
-                     Readings_Buffer_Channel_2.Data (I) <= Trigger_Level
-                  then
-                     Triggered := True;
-                  end if;
-               when 3 | 7 =>
-                  if Readings_Buffer_Channel_3.Data
-                        (I + 1) > Trigger_Level and then
-                     Readings_Buffer_Channel_3.Data (I) <= Trigger_Level
-                  then
-                     Triggered := True;
-                  end if;
-               when others =>
-                  Put_Line ("Error Buffered_Data.Processed_Data");
-                  Put_Line ("Wrong channel entered:" & Channel'Image);
-            end case;
-            if Triggered then
+            if Buffer.Data (I + 1) > Trigger_Level and then
+               Buffer.Data (I) <= Trigger_Level
+            then
                --  Take data before and after trigger point
                --  (trigger will be in center)
                Capture_Start := I - (Number_Of_Samples / 4) + 1;
@@ -276,29 +238,10 @@ package body Globals is
          --  Save the processed data in the processed data array
          --  only if we were able to trigger
          if Triggered then
-            case Channel is
-               when 1 | 5 =>
-                  Globals.Processed_Data.Set_Data (
-                     Channel => Channel,
-                     Data    => Readings_Buffer_Channel_1.Data
-                        (Capture_Start .. Capture_End)
-                  );
-               when 2 | 6 =>
-                  Globals.Processed_Data.Set_Data (
-                     Channel => Channel,
-                     Data    => Readings_Buffer_Channel_2.Data
-                        (Capture_Start .. Capture_End)
-                  );
-               when 3 | 7 =>
-                  Globals.Processed_Data.Set_Data (
-                     Channel => Channel,
-                     Data    => Readings_Buffer_Channel_3.Data
-                        (Capture_Start .. Capture_End)
-                  );
-               when others =>
-                  Put_Line ("Error Buffered_Data.Processed_Data");
-                  Put_Line ("Wrong channel entered:" & Channel'Image);
-            end case;
+            Globals.Processed_Data.Set_Data (
+               Channel => Channel,
+               Data    => Buffer (Capture_Start .. Capture_End)
+            );
          end if;
       end Process_Data;
 
