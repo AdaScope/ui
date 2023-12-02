@@ -1,4 +1,3 @@
-with Ada.Characters.Handling;
 with Ada.Text_IO; use Ada.Text_IO;
 with Interfaces; use Interfaces;
 with Globals;
