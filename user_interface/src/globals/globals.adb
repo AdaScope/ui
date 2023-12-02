@@ -122,7 +122,7 @@ package body Globals is
                   Readings_Buffer_Channel_1.Index := 1;
                   Process_Data (
                      Channel => 1,
-                     Readings_Buffer_Channel_1.Data
+                     Buffer  => Readings_Buffer_Channel_1.Data
                   );
                end if;
 
@@ -137,7 +137,7 @@ package body Globals is
                   Readings_Buffer_Channel_2.Index := 1;
                   Process_Data (
                      Channel => 2,
-                     Readings_Buffer_Channel_2.Data
+                     Buffer  => Readings_Buffer_Channel_2.Data
                   );
                end if;
 
@@ -152,7 +152,7 @@ package body Globals is
                   Readings_Buffer_Channel_3.Index := 1;
                   Process_Data (
                      Channel => 3,
-                     Readings_Buffer_Channel_3.Data
+                     Buffer  => Readings_Buffer_Channel_3.Data
                   );
                end if;
 
@@ -205,8 +205,8 @@ package body Globals is
 
          --  Set the trigger point in the center
          for I in 1 .. Number_Of_Samples loop
-            Data_Min := Float'Min (Data_Min, Buffer.Data (I));
-            Data_Max := Float'Max (Data_Max, Buffer.Data (I));
+            Data_Min := Float'Min (Data_Min, Buffer (I));
+            Data_Max := Float'Max (Data_Max, Buffer (I));
          end loop;
          Trigger_Level := (Data_Min + Data_Max) / 2.0;
 
@@ -215,8 +215,8 @@ package body Globals is
             Number_Of_Samples - (Number_Of_Samples / 4) loop
 
             --  Check if data in the trigger range
-            if Buffer.Data (I + 1) > Trigger_Level and then
-               Buffer.Data (I) <= Trigger_Level
+            if Buffer (I + 1) > Trigger_Level and then
+               Buffer (I) <= Trigger_Level
             then
                --  Take data before and after trigger point
                --  (trigger will be in center)
