@@ -53,7 +53,7 @@ package Globals is
       --  Gets the data array
       function Get_Data_Point (
          Channel : Integer;
-         N       : Integer
+         Index   : Integer
       ) return Float;
 
    private
@@ -82,7 +82,7 @@ package Globals is
          Channel : Integer
       );
 
-      --  Does all the triggering
+      --  Does all the triggering processing
       procedure Process_Data (
          Channel : Integer;
          Buffer  : Uart.Readings_Array

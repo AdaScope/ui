@@ -32,9 +32,9 @@ package body Globals is
 
    protected body Processed_Data is
 
-      ------------------------------------------------
-      -- Sets processed data for specified channel  --
-      ------------------------------------------------
+      -----------------------------------------------
+      -- Sets processed data for specified channel --
+      -----------------------------------------------
       procedure Set_Data (
          Channel : Integer;
          Data    : Uart.Readings_Array
@@ -53,9 +53,9 @@ package body Globals is
          end case;
       end Set_Data;
 
-      ------------------------------------------------
-      -- Gets processed data for specified channel  --
-      ------------------------------------------------
+      -----------------------------------------------
+      -- Gets processed data for specified channel --
+      -----------------------------------------------
       function Get_Data (
          Channel : Integer
       ) return Uart.Readings_Array is
@@ -81,16 +81,16 @@ package body Globals is
       -----------------------------------------------------
       function Get_Data_Point (
          Channel : Integer;
-         N : Integer
+         Index   : Integer
       ) return Float is
       begin
          case Channel is
             when 1 | 5 =>
-               return Processed_Data_Channel_1 (N);
+               return Processed_Data_Channel_1 (Index);
             when 2 | 6 =>
-               return Processed_Data_Channel_2 (N);
+               return Processed_Data_Channel_2 (Index);
             when 3 | 7 =>
-               return Processed_Data_Channel_3 (N);
+               return Processed_Data_Channel_3 (Index);
             when others =>
                Put_Line ("Error Processed_Data.Get_Data_Point");
                Put_Line ("Wrong channel entered:" & Channel'Image);
@@ -101,9 +101,9 @@ package body Globals is
 
    protected body Buffered_Data is
 
-      -------------------------------------------------
-      -- Sets unprocessed data for specified channel --
-      -------------------------------------------------
+      -----------------------------------------------------------------
+      -- Sets unprocessed data point in buffer for specified channel --
+      -----------------------------------------------------------------
       procedure Set_Data (
          Channel : Integer;
          Data    : Float
@@ -161,9 +161,9 @@ package body Globals is
          end case;
       end Set_Data;
 
-      ---------------------------------------------------
-      -- Resets unprocessed data for specified channel --
-      ---------------------------------------------------
+      -----------------------------------------
+      -- Resets buffer for specified channel --
+      -----------------------------------------
       procedure Reset_Buffer (
          Channel : Integer
       ) is
@@ -181,6 +181,9 @@ package body Globals is
          end case;
       end Reset_Buffer;
 
+      ----------------------------------------
+      -- Does all the triggering processing --
+      ----------------------------------------
       procedure Process_Data (
          Channel : Integer;
          Buffer  : Uart.Readings_Array
@@ -213,7 +216,7 @@ package body Globals is
          for I in (Number_Of_Samples / 4) + 1 ..
             Number_Of_Samples - (Number_Of_Samples / 4) loop
 
-            --  Check if data in the trigger range
+            --  Check if data meets trigger condition
             if Buffer (I + 1) > Trigger_Level and then
                Buffer (I) <= Trigger_Level
             then
@@ -223,7 +226,7 @@ package body Globals is
                Capture_End := I + (Number_Of_Samples / 4);
 
                --  Make sure we have the correct number of samples
-               --  (Should be half of the data buffer)
+               --  (Should be half of the data buffer size)
                if (Capture_End - Capture_Start) /=
                   (Number_Of_Samples / 2) - 1
                then

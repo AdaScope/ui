@@ -5,6 +5,7 @@ with Globals;
 
 package body Uart is
 
+   --  Reads the data from the UART and sends it to Min_Ada
    task body Read is
 
       --  Variables for the serial read
@@ -15,13 +16,14 @@ package body Uart is
       Context  : Min_Ada.Min_Context;
    begin
 
-      select -- Waiting for parameters or exit request
+      --  Waiting for parameters or exit request
+      select
          accept Start do
-
+            --  Initialize context
             Min_Ada.Min_Init_Context (Context => Context);
 
             loop
-               --  Read data from serial port
+               --  Read one byte from serial port
                GNAT.Serial_Communications.Read (
                   Port   => Globals.Port,
                   Buffer => Buffer,
