@@ -11,9 +11,9 @@ use type Globals.Board_State;
 
 package body Worker is
 
-   --  Variables for data collection
+   --  X and Y value pairs to be displayed in the graph
    X : Integer := 0;
-   Y : Float := 0.0;
+   Y : Float   := 0.0;
 
    --  Feeding data to oscilloscope
    procedure Feed_UART_Data (
@@ -23,11 +23,11 @@ package body Worker is
    begin
 
       --  Feed data to the graph
-      for N in 1 .. Globals.Number_Of_Samples / 2 loop
-         X := N;
+      for Index in 1 .. Globals.Number_Of_Samples / 2 loop
+         X := Index;
          Y := Globals.Processed_Data.Get_Data_Point (
             Channel => Integer'Val (Channel),
-            N => N
+            Index   => Index
          );
 
          Scope.Feed (
@@ -40,14 +40,16 @@ package body Worker is
 
    --  Managing pause/play
    task body Process is
-      Scope      : Gtk_Oscilloscope;
-      Channel_1   : Channel_Number;
-      Channel_2   : Channel_Number;
-      Channel_3   : Channel_Number;
-      Last_Time  : Time := Clock;
+      Scope     : Gtk_Oscilloscope;
+      Channel_1 : Channel_Number;
+      Channel_2 : Channel_Number;
+      Channel_3 : Channel_Number;
+      Last_Time : Time := Clock;
 
    begin
-      select -- Waiting for parameters or exit request
+
+      --  Waiting for parameters or exit request
+      select
          accept Start (
             Scope     : Gtk_Oscilloscope;
             Channel_1 : Channel_Number;
@@ -67,8 +69,8 @@ package body Worker is
       end select;
 
       Put_Line ("Starting computations");
+
       --  Starting computations
-      --  Looping
       while True loop
 
          --  Updating each 200ms
