@@ -85,6 +85,20 @@ package Min_Ada is
       Port                     : Byte;
    end record;
 
+   --  Type for overriding Min_Application_Handler
+   type Min_Application_Handler_Access is access
+      procedure (
+         ID             : App_ID;
+         Payload        : Min_Payload;
+         Payload_Length : Byte
+      );
+
+   --  Type for overriding Tx_Byte
+   type Tx_Byte_Access is access
+      procedure (
+         Data : Byte
+      );
+
    procedure Send_Frame (
       Context        : in out Min_Context;
       ID             : App_ID;
@@ -123,6 +137,14 @@ package Min_Ada is
       ID             : App_ID;
       Payload        : Min_Payload;
       Payload_Length : Byte
+   );
+
+   procedure Set_Min_Application_Handler_Callback (
+      Callback : Min_Application_Handler_Access
+   );
+
+   procedure Set_Tx_Byte_Callback (
+      Callback : Tx_Byte_Access
    );
 
 end Min_Ada;

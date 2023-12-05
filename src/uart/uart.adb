@@ -2,6 +2,7 @@ with GNAT.Serial_Communications;
 with Gtk.Main.Router;
 with Ada.Streams;
 with Globals;
+with My_Min_Ada;
 
 package body Uart is
 
@@ -21,6 +22,7 @@ package body Uart is
          accept Start do
             --  Initialize context
             Min_Ada.Min_Init_Context (Context => Context);
+            My_Min_Ada.Override_Min_Application_Handler;
 
             loop
                --  Read one byte from serial port

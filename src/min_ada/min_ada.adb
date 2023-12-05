@@ -1,9 +1,11 @@
 with Ada.Text_IO; use Ada.Text_IO;
-with Interfaces; use Interfaces;
-with Globals;
-with Uart;
+with Interfaces;  use Interfaces;
 
 package body Min_Ada is
+
+   --  Used to store the overridden procedures
+   Min_Application_Handler_Callback : Min_Application_Handler_Access;
+   Tx_Byte_Callback                 : Tx_Byte_Access;
 
    procedure Send_Frame (
       Context           : in out Min_Context;
@@ -15,14 +17,27 @@ package body Min_Ada is
       Checksum_Bytes    : CRC_Bytes with Address => Checksum'Address;
       ID_Control        : Byte with Address => Header.ID'Address;
       Header            : Frame_Header :=
-         (HEADER_BYTE, HEADER_BYTE, HEADER_BYTE, ID, 0, 0);
+                           (
+                              Header_1  => HEADER_BYTE,
+                              Header_2  => HEADER_BYTE,
+                              Header_3  => HEADER_BYTE,
+                              ID        => ID,
+                              Reserved  => 0,
+                              Transport => 0
+                           );
    begin
       Context.Tx_Header_Byte_Countdown := 2;
       System.CRC32.Initialize (Context.Tx_Checksum);
 
-      Tx_Byte (Header.Header_1);
-      Tx_Byte (Header.Header_2);
-      Tx_Byte (Header.Header_3);
+      Tx_Byte (
+         Data => Header.Header_1
+      );
+      Tx_Byte (
+         Data => Header.Header_2
+      );
+      Tx_Byte (
+         Data => Header.Header_3
+      );
 
       --  Send App ID, reserved bit, transport bit (together as one byte)
       Stuffed_Tx_Byte (Context, ID_Control, True);
@@ -40,15 +55,31 @@ package body Min_Ada is
       Stuffed_Tx_Byte (Context, Checksum_Bytes (2), False);
       Stuffed_Tx_Byte (Context, Checksum_Bytes (1), False);
 
-      Tx_Byte (EOF_BYTE);
+      Tx_Byte (
+         Data => EOF_BYTE
+      );
    end Send_Frame;
 
-   procedure Rx_Bytes (
-      Context   : in out Min_Context;
-      Data      : Byte
+   procedure Tx_Byte (
+      Data : Byte
    ) is
-      Real_Checksum     : Interfaces.Unsigned_32;
-      Frame_Checksum    : Interfaces.Unsigned_32 with Address =>
+   begin
+      --  Allow for user to override
+      if Tx_Byte_Callback /= null then
+         Tx_Byte_Callback.all (
+            Data => Data
+         );
+      else
+         Put_Line ("Make sure to override Tx_Byte");
+      end if;
+   end Tx_Byte;
+
+   procedure Rx_Bytes (
+      Context : in out Min_Context;
+      Data    : Byte
+   ) is
+      Real_Checksum  : Interfaces.Unsigned_32;
+      Frame_Checksum : Interfaces.Unsigned_32 with Address =>
          Context.Rx_Frame_Checksum'Address;
    begin
       if Context.Rx_Header_Bytes_Seen = 2 then
@@ -79,16 +110,19 @@ package body Min_Ada is
             null;
 
          when RECEIVING_ID_CONTROL =>
-            Context.Rx_Frame_ID_Control     := Data;
-            Context.Rx_Frame_Payload_Bytes  := 0;
+            Context.Rx_Frame_ID_Control    := Data;
+            Context.Rx_Frame_Payload_Bytes := 0;
             System.CRC32.Initialize (Context.Rx_Checksum);
             System.CRC32.Update (Context.Rx_Checksum, Character'Val (Data));
 
-            if MSB_Is_One (Data) then
+            if MSB_Is_One (
+               Data => Data
+            )
+            then
                Context.Rx_Frame_State := SEARCHING_FOR_SOF;
             else
-               Context.Rx_Frame_Seq     := 0;
-               Context.Rx_Frame_State   := RECEIVING_LENGTH;
+               Context.Rx_Frame_Seq   := 0;
+               Context.Rx_Frame_State := RECEIVING_LENGTH;
             end if;
 
          when RECEIVING_SEQ =>
@@ -120,19 +154,19 @@ package body Min_Ada is
             end if;
 
          when RECEIVING_CHECKSUM_4 =>
-            Context.Rx_Frame_Checksum (4)   := Data;
-            Context.Rx_Frame_State          := RECEIVING_CHECKSUM_3;
+            Context.Rx_Frame_Checksum (4) := Data;
+            Context.Rx_Frame_State        := RECEIVING_CHECKSUM_3;
 
          when RECEIVING_CHECKSUM_3 =>
-            Context.Rx_Frame_Checksum (3)   := Data;
-            Context.Rx_Frame_State          := RECEIVING_CHECKSUM_2;
+            Context.Rx_Frame_Checksum (3) := Data;
+            Context.Rx_Frame_State        := RECEIVING_CHECKSUM_2;
 
          when RECEIVING_CHECKSUM_2 =>
-            Context.Rx_Frame_Checksum (2)   := Data;
-            Context.Rx_Frame_State          := RECEIVING_CHECKSUM_1;
+            Context.Rx_Frame_Checksum (2) := Data;
+            Context.Rx_Frame_State        := RECEIVING_CHECKSUM_1;
 
          when RECEIVING_CHECKSUM_1 =>
-            Context.Rx_Frame_Checksum (1)   := Data;
+            Context.Rx_Frame_Checksum (1) := Data;
 
             Real_Checksum := System.CRC32.Get_Value (Context.Rx_Checksum);
             if Frame_Checksum /= Real_Checksum then
@@ -159,26 +193,21 @@ package body Min_Ada is
    ) is
    begin
       Min_Application_Handler (
-         ID      => App_ID (Context.Rx_Frame_ID_Control),
-         Payload => Context.Rx_Frame_Payload_Buffer,
+         ID             => App_ID (Context.Rx_Frame_ID_Control),
+         Payload        => Context.Rx_Frame_Payload_Buffer,
          Payload_Length => Context.Rx_Frame_Payload_Bytes
       );
    end Valid_Frame_Received;
 
-   procedure Tx_Byte (
-      Data : Byte
-   ) is
-   begin
-      Put_Line (Data'Image);
-   end Tx_Byte;
-
    procedure Stuffed_Tx_Byte (
-      Context   : in out Min_Context;
-      Data      : Byte;
-      CRC       : Boolean
+      Context : in out Min_Context;
+      Data    : Byte;
+      CRC     : Boolean
    ) is
    begin
-      Tx_Byte (Data);
+      Tx_Byte (
+         Data => Data
+      );
       if CRC then
          System.CRC32.Update (Context.Tx_Checksum, Character'Val (Data));
       end if;
@@ -188,7 +217,9 @@ package body Min_Ada is
             Context.Tx_Header_Byte_Countdown - 1;
 
          if Context.Tx_Header_Byte_Countdown = 0 then
-            Tx_Byte (STUFF_BYTE);
+            Tx_Byte (
+               Data => STUFF_BYTE
+            );
             Context.Tx_Header_Byte_Countdown := 2;
          end if;
       else
@@ -221,37 +252,38 @@ package body Min_Ada is
       end if;
    end MSB_Is_One;
 
+   --  To override Min_Application_Handler
+   procedure Set_Min_Application_Handler_Callback (
+      Callback : Min_Application_Handler_Access
+   ) is
+   begin
+      Min_Application_Handler_Callback := Callback;
+   end Set_Min_Application_Handler_Callback;
+
+   --  To override Tx_Byte
+   procedure Set_Tx_Byte_Callback (
+      Callback : Tx_Byte_Access
+   ) is
+   begin
+      Tx_Byte_Callback := Callback;
+   end Set_Tx_Byte_Callback;
+
    procedure Min_Application_Handler (
       ID             : App_ID;
       Payload        : Min_Payload;
       Payload_Length : Byte
    ) is
-      Reading_Array : Uart.Reading_From_Bytes;
-      Current_Reading    : Uart.Reading with Address =>
-         Reading_Array'Address;
    begin
-
-      --  Check if fist frame to reset the buffers (this makes sure the
-      --  data in the buffers is always contiguous
-      if ID = 5 or else ID = 6 or else ID = 7 then
-         Globals.Buffered_Data.Reset_Buffer (
-            Channel => Integer'Value (ID'Image)
+      --  Allow for user to override
+      if Min_Application_Handler_Callback /= null then
+         Min_Application_Handler_Callback.all (
+            ID             => ID,
+            Payload        => Payload,
+            Payload_Length => Payload_Length
          );
+      else
+         Put_Line ("Make sure to override Min_Application_Handler");
       end if;
-
-      --  Loop over all the data in the payload
-      for I in 1 .. Integer'Val (Payload_Length) loop
-         if I mod 2 /= 0 then
-            Reading_Array (2) := Payload (Min_Ada.Byte (I));
-         else
-            Reading_Array (1) := Payload (Min_Ada.Byte (I));
-            --  Save the current number in the data buffer
-            Globals.Buffered_Data.Set_Data (
-               Channel => Integer'Value (ID'Image),
-               Data => Float (Current_Reading)
-            );
-         end if;
-      end loop;
    end Min_Application_Handler;
 
 end Min_Ada;
